@@ -1,0 +1,508 @@
+/* 人物卡片抽取页 */
+body[data-p5r-page="card-draw"] .p5r-cardDrawMain{
+  min-height: 100vh;
+  padding: calc(var(--p5r-h) + var(--p5r-blockGap)) var(--p5r-edgePad) min(180px, 22vh);
+  box-sizing: border-box;
+  background-color: #4b0010;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  overflow-x: visible;
+}
+
+/* 牌台整体 1.5 倍，以中心为原点（布局占位仍为未缩放尺寸，底部多留 padding 防裁切） */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__scaler{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  max-width: 100%;
+  transform: scale(1.5);
+  transform-origin: center center;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__stage{
+  position: relative;
+  width: min(96vw, 920px);
+  min-height: min(52vh, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1400px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan{
+  position: relative;
+  width: 100%;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 立绘打开时占位：不占交互、不参与布局，仅保持 fan 内 nth-child 与牌位一致 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fanSlot{
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* 展开后横排需更宽，避免裁切 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned{
+  min-width: min(100%, 860px);
+}
+
+/* 牌背：红底 + 金色花纹（纯 CSS） */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__backArt{
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 45%, rgba(255, 215, 120, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(180, 20, 40, 0.95) 0%, #4a0610 48%, #1a0308 100%);
+  border: 3px solid #c9a227;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 160, 0.35),
+    inset 0 0 28px rgba(0, 0, 0, 0.45),
+    0 4px 18px rgba(0, 0, 0, 0.5);
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__backArt::before{
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(80, 10, 20, 0.6),
+    0 0 0 1px rgba(255, 220, 140, 0.12);
+  pointer-events: none;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__backArt::after{
+  content: "♦";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -52%) rotate(45deg);
+  font-size: clamp(36px, 10vw, 52px);
+  color: rgba(212, 175, 55, 0.55);
+  text-shadow: 0 0 12px rgba(255, 200, 100, 0.25);
+  pointer-events: none;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__card{
+  position: absolute;
+  width: 148px;
+  height: 208px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition:
+    transform 0.65s cubic-bezier(0.34, 0.82, 0.35, 1),
+    opacity 0.35s ease,
+    filter 0.35s ease,
+    box-shadow 0.35s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__card:focus-visible{
+  outline: 2px solid rgba(28, 254, 255, 0.65);
+  outline-offset: 4px;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__cardInner{
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+  border-radius: 10px;
+}
+
+/* 红黑慢流光 + 同向窄条闪光：每张牌都有（含弹层内克隆牌）；随 cardInner 一起翻转 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__cardInner::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 6;
+  mix-blend-mode: screen;
+  opacity: 0.62;
+  background-image:
+    linear-gradient(
+      118deg,
+      transparent 0%,
+      transparent 30%,
+      rgba(0, 0, 0, 0.65) 38%,
+      rgba(255, 0, 34, 0.4) 44%,
+      rgba(60, 0, 12, 0.55) 50%,
+      rgba(0, 0, 0, 0.75) 56%,
+      rgba(255, 0, 34, 0.28) 64%,
+      transparent 76%,
+      transparent 100%
+    ),
+    linear-gradient(
+      118deg,
+      transparent 0%,
+      transparent 44%,
+      rgba(255, 255, 255, 0) 47.5%,
+      rgba(255, 255, 255, 0.75) 49.2%,
+      rgba(255, 220, 228, 1) 50%,
+      rgba(255, 0, 34, 0.9) 50.5%,
+      rgba(255, 255, 255, 0.55) 51.2%,
+      rgba(255, 255, 255, 0) 54%,
+      transparent 100%
+    );
+  background-size: 300% 100%, 300% 100%;
+  background-position: -35% 50%, -35% 50%;
+  animation: p5r-cardDrawSheen 7.8s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+@keyframes p5r-cardDrawSheen{
+  /* 0 与 100% 一致：无缝循环；去程 0→50%、回程 50→100% 对称慢扫 */
+  0%,
+  100%{
+    background-position: -34% 50%, -34% 50%;
+    opacity: 0.5;
+    filter: brightness(1);
+  }
+  20%{
+    opacity: 0.56;
+  }
+  /* 去程末端：宽带 + 窄条高光叠在牌心附近，形成闪光 */
+  48%{
+    opacity: 0.72;
+    filter: brightness(1.18);
+  }
+  50%{
+    background-position: 128% 50%, 128% 50%;
+    opacity: 0.9;
+    filter: brightness(1.36);
+  }
+  52%{
+    opacity: 0.72;
+    filter: brightness(1.14);
+  }
+  80%{
+    opacity: 0.56;
+  }
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__card.is-revealed .p5r-cardDraw__cardInner{
+  transform: rotateY(180deg);
+}
+
+/* 翻面时 cardInner 的 rotateY(180deg) 会把流光水平镜像，扫向与牌背相反；对 ::after 再 scaleX(-1) 抵消，与选中前一致 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__card.is-revealed .p5r-cardDraw__cardInner::after{
+  transform: scaleX(-1);
+  transform-origin: center center;
+}
+
+/* 有选中时仅当前牌保留流光；取消选中（如点击空白收拢）去掉 has-selection 后恢复 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned.has-selection .p5r-cardDraw__card:not(.is-selected) .p5r-cardDraw__cardInner::after{
+  opacity: 0;
+  animation: none;
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__face{
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  opacity: 1;
+  filter: none;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__face--front{
+  transform: rotateY(180deg);
+  background: #120508;
+  border: 2px solid rgba(201, 162, 39, 0.45);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__face--front img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* 叠牌 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card{
+  left: 50%;
+  top: 50%;
+  margin-left: -74px;
+  margin-top: -104px;
+}
+/* 叠牌：仅轻微错位，不旋转，保持整齐 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card:nth-child(1){
+  transform: translate(0, 0);
+  z-index: 5;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card:nth-child(2){
+  transform: translate(3px, 4px);
+  z-index: 4;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card:nth-child(3){
+  transform: translate(6px, 8px);
+  z-index: 3;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card:nth-child(4){
+  transform: translate(9px, 12px);
+  z-index: 2;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-stacked .p5r-cardDraw__card:nth-child(5){
+  transform: translate(12px, 16px);
+  z-index: 1;
+}
+
+/* 展开：平行横排，无旋转（步长 = 牌宽 + 间距） */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card{
+  left: 50%;
+  top: 50%;
+  margin-left: -74px;
+  margin-top: -104px;
+  /* 统一层级，切换选中时其它牌不因 z-index 突变而像「挤动」 */
+  z-index: 1;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(1){
+  transform: translate(-324px, 0);
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(2){
+  transform: translate(-162px, 0);
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(3){
+  transform: translate(0, 0);
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(4){
+  transform: translate(162px, 0);
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(5){
+  transform: translate(324px, 0);
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card.is-selected{
+  z-index: 2;
+}
+
+/* 有选中时：明暗只加在 .face 上，不动父级 filter，避免流光 ::after 被压暗或变形 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned.has-selection .p5r-cardDraw__card .p5r-cardDraw__face{
+  transition:
+    opacity 0.28s ease,
+    filter 0.28s ease;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned.has-selection .p5r-cardDraw__card:not(.is-selected) .p5r-cardDraw__face{
+  opacity: 0.38;
+  filter: brightness(0.42) saturate(0.65);
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card.is-selected .p5r-cardDraw__face{
+  filter: drop-shadow(0 0 14px rgba(28, 254, 255, 0.4));
+}
+
+/* 名片弹层 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardLayer{
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  perspective: 1200px;
+}
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardLayer[hidden]{
+  display: none !important;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardBackdrop{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+}
+
+/* 关闭键置顶 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardClose{
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  z-index: 280;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(20, 20, 26, 0.9);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardScene{
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  padding: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+/* 与牌同大的锚点：先重叠 → 牌向后倒，立绘保持竖直、整体上移露出人物 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardAnchor{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 148px;
+  height: 208px;
+  z-index: 5;
+  pointer-events: auto;
+  perspective: 1100px;
+  transform-style: preserve-3d;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPair{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* 与牌同尺寸的两扇，transform-origin 底边中点 = 共用铰链，初始重叠 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPortraitShell,
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardCardShell{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPortraitShell{
+  z-index: 2;
+  transition: transform 0.88s cubic-bezier(0.33, 0.85, 0.32, 1);
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardCardShell{
+  z-index: 1;
+  filter: none;
+  opacity: 1;
+  transition:
+    transform 0.88s cubic-bezier(0.33, 0.85, 0.32, 1),
+    filter 0.88s cubic-bezier(0.33, 0.85, 0.32, 1),
+    opacity 0.88s cubic-bezier(0.33, 0.85, 0.32, 1);
+}
+
+/* 翻开：牌向后倒，牌面雾化；合上时随过渡恢复清晰 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPair.is-spread .p5r-cardDraw__vcardCardShell{
+  transform: rotateX(78deg);
+  filter: blur(6px) saturate(0.72) brightness(1.12);
+  opacity: 0.78;
+}
+
+/* 立绘扇区不位移：与锚点同盒，底=铰链；叠在牌之上，故人物图底与翻后牌面底同一条线 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPair.is-spread .p5r-cardDraw__vcardPortraitShell{
+  transform: rotateX(0deg);
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPortraitInner{
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardFigure{
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+/* 弹层内的选中牌：铺满下扇 */
+body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardCardShell > .p5r-cardDraw__card{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  pointer-events: auto;
+}
+
+@media (max-width: 720px){
+  /* 窄屏：仍平行，略缩小间距，必要时与 stage 横向滚动配合 */
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(1){
+    transform: translate(-248px, 0);
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(2){
+    transform: translate(-124px, 0);
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(3){
+    transform: translate(0, 0);
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(4){
+    transform: translate(124px, 0);
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__fan.is-fanned .p5r-cardDraw__card:nth-child(5){
+    transform: translate(248px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__cardInner::after{
+    animation: none !important;
+    opacity: 0.22;
+    filter: none !important;
+    background-position: 50% 50%, 50% 50%;
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__card{
+    transition-duration: 0.01ms !important;
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__cardInner{
+    transition-duration: 0.01ms !important;
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPortraitShell,
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardCardShell{
+    transition-duration: 0.01ms !important;
+  }
+  body[data-p5r-page="card-draw"] .p5r-cardDraw__vcardPair.is-spread .p5r-cardDraw__vcardCardShell{
+    filter: none !important;
+    opacity: 1 !important;
+  }
+}
+</think>
+
+
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+Read

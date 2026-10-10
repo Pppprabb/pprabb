@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>人物</title>
+
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../characters.css" />
+  </head>
+
+  <body class="p5r-characters" data-p5r-page="characters">
+    <header class="p5r-header" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a
+                class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item is-current"
+                href="../../player4/pages/characters.html"
+                aria-current="page"
+                >人物</a
+              >
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 固定版心：与日历/预告信同幅滚动，避免 fixed 侧栏在缩放或横向滚动时错位 -->
+    <div class="p5r-shell">
+    <!-- Banner（约 3cm，和 Header 重叠：Banner 从页面顶部开始铺） -->
+    <section class="p5r-banner" aria-label="banner">
+      <img
+        class="p5r-banner__bg"
+        src="../../../shared/p5ui/assets/doc-build/bg1.b9635d84.png"
+        alt=""
+      />
+      <div class="p5r-banner__veil" aria-hidden="true"></div>
+    </section>
+
+    <!-- 左侧固定：轮播 + 日历 + 浮动广告 -->
+    <aside class="p5r-side p5r-side--left" aria-label="左侧日历区域">
+      <div class="p5r-calendarOuter">
+      <section class="p5r-calendarCard" aria-label="日历卡片">
+        <!-- 整卡共用一张底图，与下方日期区同一套 cover，轮播切换完全同步 -->
+        <div class="p5r-calBgLayer" aria-hidden="true">
+          <img id="calHeroImg" class="p5r-calBgLayer__img" alt="" />
+        </div>
+        <div class="p5r-calHero" aria-label="轮播图片区">
+          <div id="calHeroDots" class="p5r-calHero__dots" aria-label="轮播指示器"></div>
+        </div>
+
+        <div class="p5r-calBody" aria-label="日期区">
+          <div class="p5r-calHead">
+            <button id="calPrev" class="p5r-calNav" type="button" aria-label="上个月">‹</button>
+            <div class="p5r-calTitleWrap">
+              <div id="calTitleDisplay" class="p5r-calTitleDisplay" aria-live="polite">
+                <span
+                  id="calYearPart"
+                  class="p5r-calPick"
+                  role="button"
+                  tabindex="0"
+                  title="双击修改年份"
+                ></span><span class="p5r-calPickSep">年</span>
+                <span
+                  id="calMonthPart"
+                  class="p5r-calPick"
+                  role="button"
+                  tabindex="0"
+                  title="双击修改月份"
+                ></span><span class="p5r-calPickSep">月</span>
+              </div>
+              <div id="calJumpYearBar" class="p5r-calJumpInline" hidden>
+                <input
+                  id="calJumpYear"
+                  class="p5r-calJumpInput"
+                  type="number"
+                  min="1900"
+                  max="2100"
+                  inputmode="numeric"
+                  aria-label="年份"
+                />
+                <span class="p5r-calJumpSep">年</span>
+                <button id="calYearOk" class="p5r-calJumpOk" type="button">确定</button>
+              </div>
+              <div id="calJumpMonthBar" class="p5r-calJumpInline" hidden>
+                <input
+                  id="calJumpMonth"
+                  class="p5r-calJumpInput p5r-calJumpInput--m"
+                  type="number"
+                  min="1"
+                  max="12"
+                  inputmode="numeric"
+                  aria-label="月份"
+                />
+                <span class="p5r-calJumpSep">月</span>
+                <button id="calMonthOk" class="p5r-calJumpOk" type="button">确定</button>
+              </div>
+            </div>
+            <button id="calNext" class="p5r-calNav" type="button" aria-label="下个月">›</button>
+          </div>
+
+          <div class="p5r-calWeek" aria-hidden="true">
+            <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+          </div>
+
+          <div id="calGrid" class="p5r-calGrid" role="grid" aria-label="日历"></div>
+        </div>
+      </section>
+      </div>
+
+      <button id="floatAd" class="p5r-floatAd" type="button" aria-label="浮动广告">
+        <span class="p5r-floatAd__bob" aria-hidden="true">
+          <img
+            id="floatAdImg"
+            src="../../../皇家p5r/摩尔加纳/摩尔加纳 (1).png"
+            alt="ad"
+          />
+        </span>
+      </button>
+    </aside>
+
+    <!-- 中间人物介绍区：P5 数据表格 + 华容道拼图 -->
+    <main class="p5r-main" aria-label="人物介绍区">
+      <section class="p5r-intro" aria-label="人物介绍">
+        <h2 class="p5-title-ctn p5r-charTableHeading">
+          <span class="p5r-staggerTitle__track">
+            <span class="p5r-staggerTitle__ch">主</span>
+            <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">要</span>
+            <span class="p5r-staggerTitle__ch">角</span>
+            <span class="p5r-staggerTitle__ch">色</span>
+          </span>
+        </h2>
+        <div class="p5-table-ctn p5-scrollbar p5r-charTableScroll">
+          <table class="p5r-charTable" cellspacing="0">
+            <thead>
+              <tr>
+                <th scope="col">人物</th>
+                <th scope="col">头像</th>
+                <th scope="col">介绍</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="1"
+                data-char-href="https://baike.baidu.com/item/%E4%BD%90%E4%BB%93%E5%8F%8C%E5%8F%B6/20168710"
+                tabindex="0"
+                role="link"
+                aria-label="佐仓双叶，在新窗口打开百科介绍"
+              >
+                <td>佐仓双叶</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/futaba.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">闭家不出的天才黑客与怪盗团导航</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="1"
+                data-char-href="https://baike.baidu.com/item/%E6%91%A9%E5%B0%94%E5%8A%A0%E7%BA%B3/22450608"
+                tabindex="0"
+                role="link"
+                aria-label="摩尔加纳，在新窗口打开百科介绍"
+              >
+                <td>摩尔加纳</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">会说话的黑猫怪盗团向导核心同伴</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="1"
+                data-char-href="https://baike.baidu.com/item/%E5%9D%82%E6%9C%AC%E9%BE%99%E5%8F%B8/20169117"
+                tabindex="0"
+                role="link"
+                aria-label="坂本龙司，在新窗口打开百科介绍"
+              >
+                <td>坂本龙司</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/ryuji.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">秀尽学园热血少年怪盗团冲锋队长</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="1"
+                data-char-href="https://baike.baidu.com/item/%E9%AB%98%E5%8D%B7%E6%9D%8F/20169131"
+                tabindex="0"
+                role="link"
+                aria-label="高卷杏，在新窗口打开百科介绍"
+              >
+                <td>高卷杏</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/ann.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">混血模特辣妹觉醒人格面具的怪盗</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="1"
+                data-char-href="https://baike.baidu.com/item/%E6%96%B0%E5%B2%9B%E7%9C%9F/20169227"
+                tabindex="0"
+                role="link"
+                aria-label="新岛真，在新窗口打开百科介绍"
+              >
+                <td>新岛真</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/makoto.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">冷静秀尽学生会长怪盗团参谋女王</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="2"
+                data-char-href="https://baike.baidu.com/item/%E5%A5%A5%E6%9D%91%E6%98%A5/20168705"
+                tabindex="0"
+                role="link"
+                aria-label="奥村春，在新窗口打开百科介绍"
+                hidden
+              >
+                <td>奥村春</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/haru.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">社长千金稳重善良怪盗团最后成员</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="2"
+                data-char-href="https://baike.baidu.com/item/%E5%96%9C%E5%A4%9A%E5%B7%9D%E7%A5%90%E4%BB%8B/22450609"
+                tabindex="0"
+                role="link"
+                aria-label="喜多川祐介，在新窗口打开百科介绍"
+                hidden
+              >
+                <td>喜多川祐介</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/yusuke.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">沉醉美术的美少年怪盗团孤傲成员</span>
+                </td>
+              </tr>
+              <tr
+                class="p5-tr-onhover p5r-charRow"
+                data-char-page="2"
+                data-char-href="https://baike.baidu.com/item/%E6%98%8E%E6%99%BA%E5%90%BE%E9%83%8E/20172060"
+                tabindex="0"
+                role="link"
+                aria-label="明智吾郎，在新窗口打开百科介绍"
+                hidden
+              >
+                <td>明智吾郎</td>
+                <td class="p5r-charPortraitCell">
+                  <img
+                    class="p5r-charPortrait"
+                    src="../../../shared/p5ui/assets/src-assets/images/portraits/akechi.png"
+                    alt=""
+                    width="45"
+                    height="45"
+                    aria-hidden="true"
+                  />
+                </td>
+                <td class="p5r-charIntroCell">
+                  <span class="p5r-charIntroSummary">电视名侦探高中生追查怪盗亦敌亦友</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <nav class="p5r-charPager" id="charTablePager" aria-label="角色列表分页">
+          <button type="button" class="p5r-charPagerBtn is-active" data-char-page="1" aria-current="page">1</button>
+          <button type="button" class="p5r-charPagerBtn" data-char-page="2">2</button>
+        </nav>
+
+        <section class="p5r-slidePuzzle" aria-label="华容道拼图">
+          <h2 class="p5-title-ctn p5r-slidePuzzle__title">
+            <span class="p5r-staggerTitle__track">
+              <span class="p5r-staggerTitle__ch">角</span>
+              <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">色</span>
+              <span class="p5r-staggerTitle__ch">拼</span>
+              <span class="p5r-staggerTitle__ch">图</span>
+            </span>
+          </h2>
+          <div id="slidePuzzleMount" class="p5r-slidePuzzle__mount"></div>
+          <div class="p5r-slidePuzzle__actions">
+            <button class="p5-btn-ctn p5-hover-animation-gray" type="button" id="slidePuzzleReset">打乱重玩</button>
+          </div>
+        </section>
+
+        <section class="p5r-transformAnim" aria-label="变身动画">
+          <h2 class="p5-title-ctn p5r-transformAnim__title">
+            <span class="p5r-staggerTitle__track">
+              <span class="p5r-staggerTitle__ch">变</span>
+              <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">身</span>
+              <span class="p5r-staggerTitle__ch">动</span>
+              <span class="p5r-staggerTitle__ch">画</span>
+            </span>
+          </h2>
+          <div class="p5r-transformAnim__videoWrap">
+            <video
+              class="p5r-transformAnim__video"
+              controls
+              playsinline
+              preload="metadata"
+              aria-label="变身动画视频"
+            >
+              <source src="../image/视频.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </section>
+
+        <!-- 人物介绍（图文排版 + 可切换角色；引用为百度百科短引，避免长段原文） -->
+        <section class="p5r-bio" aria-label="人物介绍">
+          <h2 class="p5-title-ctn p5r-bio__title">
+            <span class="p5r-staggerTitle__track">
+              <span class="p5r-staggerTitle__ch">人</span>
+              <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">物</span>
+              <span class="p5r-staggerTitle__ch">介</span>
+              <span class="p5r-staggerTitle__ch">绍</span>
+            </span>
+          </h2>
+
+          <div class="p5r-bioCardOuter">
+            <!-- 右侧便签抽屉：与裁剪后的人物介绍卡右缘对齐 -->
+            <div class="p5r-bioPicker" id="p5rBioPicker" aria-label="人物选择便签">
+              <button class="p5r-bioPicker__tab" id="p5rBioPickerTab" type="button" aria-expanded="false">
+                选择人物
+              </button>
+              <div class="p5r-bioPicker__drawer" id="p5rBioPickerDrawer" hidden>
+                <div class="p5r-bioPicker__grid" id="p5rBioGrid" aria-label="可拖拽人物头像"></div>
+              </div>
+            </div>
+
+            <!-- 左右各收 1cm 可视区；内层卡片加宽后裁切，眼神/过场图不整体缩小 -->
+            <div class="p5r-bioCardClip">
+          <article class="p5r-bioCard p5r-bioCard--empty" id="p5rBioCard" aria-live="polite">
+            <!-- 生成过场：先黑屏+眼神素材，后淡出（仅覆盖人物介绍卡片，不含下方按钮） -->
+            <div class="p5r-bioCard__reveal" id="p5rBioReveal" aria-hidden="true">
+              <img class="p5r-bioCard__revealImg" id="p5rBioRevealImg" alt="" />
+            </div>
+            <div class="p5r-bioCard__eyesWrap" aria-label="眼神素材展示">
+              <img class="p5r-bioCard__eyes" id="p5rBioEyes" src="" alt="" />
+            </div>
+            <div class="p5r-bioCard__stack">
+              <p class="p5r-bioCard__placeholder" id="p5rBioPlaceholder"></p>
+              <div class="p5r-bioCard__media">
+                <img class="p5r-bioCard__avatar" id="p5rBioAvatar" src="" alt="" width="88" height="88" />
+                <div class="p5r-bioCard__meta">
+                  <div class="p5r-bioCard__nameRow">
+                    <h3 class="p5-title-ctn p5r-bioCard__name" id="p5rBioName">
+                      <span class="p5r-staggerTitle__track" id="p5rBioNameTrack"></span>
+                    </h3>
+                  </div>
+                  <p class="p5r-bioCard__quote" id="p5rBioQuote"></p>
+                </div>
+              </div>
+              <div class="p5r-bioCard__body">
+                <div class="p5r-bioCard__summary" id="p5rBioSummary"></div>
+              </div>
+            </div>
+          </article>
+            </div>
+          </div>
+
+          <div class="p5r-bioDrop p5r-bioDrop--inactive" id="p5rBioDrop" aria-label="生成操作">
+            <button class="p5-btn-ctn p5-hover-animation-gray p5r-bioDrop__btn" type="button" id="p5rBioGenerate" disabled aria-hidden="true">
+              生成介绍
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- 右侧：预告信 + 输入 + 上传 -->
+    <aside class="p5r-side p5r-side--right" aria-label="右侧预告信区域">
+      <section class="p5r-letterCard" aria-label="预告信生成器">
+        <div class="p5r-letterPreview" aria-label="预告信预览">
+          <div class="p5r-letterRings" aria-hidden="true">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+              <circle cx="50" cy="50" r="8" fill="none" stroke="#ff0022" stroke-width="5" />
+              <circle cx="50" cy="50" r="16" fill="none" stroke="#0b0b0f" stroke-width="5" />
+              <circle cx="50" cy="50" r="24" fill="none" stroke="#ff0022" stroke-width="5" />
+              <circle cx="50" cy="50" r="32" fill="none" stroke="#0b0b0f" stroke-width="5" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#ff0022" stroke-width="5" />
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#0b0b0f" stroke-width="5" />
+              <circle cx="50" cy="50" r="56" fill="none" stroke="#ff0022" stroke-width="5" />
+            </svg>
+          </div>
+          <div id="letterTiles" class="p5r-letterTiles" aria-label="预告信文字层"></div>
+        </div>
+
+        <div class="p5r-letterControls" aria-label="输入与上传">
+          <div class="p5r-inputWrap">
+            <img class="p5r-inputSpark" src="../../../皇家p5r/佐仓双叶/闪光 (1).png" alt="" />
+            <textarea
+              id="letterInput"
+              class="p5r-letterInput"
+              maxlength="12"
+              rows="2"
+              placeholder="输入不超过 12 个字，生成专属预告信"
+            ></textarea>
+          </div>
+
+          <!-- Upload（site.js 会自动绑定交互） -->
+          <div class="p5-upload-ctn p5r-upload" id="letterUpload">
+            <img
+              class="p5-upload-preview"
+              src="../../../shared/p5ui/assets/src-assets/images/upload/default.png"
+              alt="upload img"
+            />
+            <img
+              class="p5-upload-delete"
+              hidden
+              src="../../../shared/p5ui/assets/src-assets/images/upload/close.png"
+              alt="delete"
+            />
+            <img
+              class="p5-star"
+              style="top:10px; left:-15px"
+              src="../../../shared/p5ui/assets/src-assets/images/upload/star.png"
+              alt=""
+            />
+            <img
+              class="p5-star"
+              style="top:40px; right:-15px"
+              src="../../../shared/p5ui/assets/src-assets/images/upload/star.png"
+              alt=""
+            />
+            <img
+              class="p5-zoom"
+              style="bottom:-15px; right:-15px"
+              src="../../../shared/p5ui/assets/src-assets/images/upload/zoom.png"
+              alt=""
+            />
+            <input type="file" accept="image/*" />
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    </div><!-- .p5r-shell -->
+
+    <footer class="p5r-pageFooter" role="contentinfo">
+      <div class="p5r-pageFooter__inner">
+        <p class="p5r-pageFooter__line">姓名：毛思瑜</p>
+        <p class="p5r-pageFooter__line">学号：302024315100</p>
+        <p class="p5r-pageFooter__line">
+          gitee链接：<a href="https://gitee.com/maosiyu26/p5r" target="_blank" rel="noopener noreferrer">https://gitee.com/maosiyu26/p5r</a>
+        </p>
+      </div>
+    </footer>
+
+    <!-- 与 test/index 一致：Notification 宿主 + 模板（路径按本页位置） -->
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display:none;">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- p5-ui：Message 宿主 -->
+    <div id="p5MsgHost"></div>
+
+    <!-- p5-ui：BackTop（与 test/index.html 一致；逻辑见 ../../shared/site.js） -->
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px;">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+
+    <!-- 人物介绍：生成过场（全屏素材图淡入淡出） -->
+    <div class="p5r-bioGenOverlay" id="p5rBioGenOverlay" hidden aria-hidden="true">
+      <img class="p5r-bioGenOverlay__img" id="p5rBioGenOverlayImg" alt="" />
+    </div>
+
+    <!-- p5-ui：Zoom 预览层 -->
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display:none;">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom" />
+        <img class="p5-zoom-close" src="../../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close" />
+      </div>
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script src="../characters.js"></script>
+  </body>
+</html>
+

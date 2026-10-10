@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>玩家反馈 - 联系</title>
+
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../../player4/characters.css" />
+    <style>
+      /* 联系页：整栏主内容跨三列（无左右侧栏） */
+      body.p5r-characters[data-p5r-page="contact"] .p5r-shell > .p5r-contactMain {
+        grid-column: 1 / -1;
+      }
+      .p5r-contactMain {
+        position: relative;
+        z-index: 2;
+        margin-top: 0;
+        padding: var(--p5r-blockGap) var(--p5r-edgePad) 48px;
+        min-height: calc(100vh - var(--p5r-h) - var(--p5r-banner) - 2 * var(--p5r-blockGap));
+        background-color: transparent;
+        box-sizing: border-box;
+      }
+      /* 版心宽度；背景红与表单区红分开（见 .p5r-contactHero / .p5r-contactFormSection） */
+      .p5r-contactInner {
+        --p5r-contactFormW: 720px;
+        --p5r-contactRedW: calc(var(--p5r-contactFormW) * 1.2);
+        max-width: var(--p5r-contactRedW);
+        margin: 0 auto;
+        padding: var(--p5r-blockGap) clamp(14px, 3vw, 22px) 40px;
+        background-color: transparent;
+        box-sizing: border-box;
+      }
+      .p5r-contactInner .p5r-contactHero,
+      .p5r-contactInner .p5r-contactFormSection {
+        max-width: var(--p5r-contactFormW);
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .p5r-contactLead {
+        margin: 0 0 var(--p5r-blockGap);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 15px;
+        line-height: 1.65;
+        letter-spacing: 0.06em;
+      }
+      .p5r-contactLead p {
+        margin: 0 0 0.75em;
+      }
+      .p5r-contactLead p:last-child {
+        margin-bottom: 0;
+      }
+      .p5r-contactCard {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55));
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        padding: 20px 18px 18px;
+        box-sizing: border-box;
+      }
+      /* 玩家反馈说明区：偏亮酒红底，与下方表单区分离 */
+      .p5r-contactHero.p5r-contactCard {
+        background: linear-gradient(165deg, #4a1522 0%, #321018 48%, #2a0a10 100%);
+        border-color: rgba(255, 120, 140, 0.22);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+      .p5r-contactHero {
+        margin-bottom: var(--p5r-blockGap);
+      }
+      .p5r-contactHero .p5r-contactPageTitle {
+        margin-bottom: 0.5em;
+      }
+      /* 提交 / 历史：更深沉的红褐底，与上方玩家反馈块视觉分开 */
+      .p5r-contactFormSection {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px 16px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 0, 34, 0.18);
+        background: linear-gradient(180deg, #24080d 0%, #160408 55%, #100306 100%);
+        box-shadow: 0 20px 56px rgba(0, 0, 0, 0.55);
+        box-sizing: border-box;
+      }
+      .p5r-contactFormSection .p5r-contactCard {
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.5));
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .p5r-contactFormBar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .p5r-contactFormBar .p5r-contactHeading {
+        margin: 0;
+        text-align: left;
+        flex: 1;
+        min-width: 0;
+      }
+      .p5r-contactFormBar .p5r-contactHeading[hidden] {
+        display: none !important;
+      }
+      .p5r-contactHistoryTab {
+        flex-shrink: 0;
+        margin: 0;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        background: #fff;
+        color: #0a0a0a;
+        font-weight: 800;
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .p5r-contactHistoryTab:hover {
+        border-color: rgba(0, 0, 0, 0.35);
+        background: #f5f5f5;
+        color: #000;
+      }
+      .p5r-contactHistoryTab.is-active {
+        border-color: #ff0022;
+        background: #fff;
+        color: #0a0a0a;
+        box-shadow: 0 0 0 2px rgba(255, 0, 34, 0.25);
+      }
+      .p5r-contactPanel[hidden] {
+        display: none !important;
+      }
+      /* 提交表单：至少为 --p5r-contact-panel-h，无内侧滚动，整块随内容增高；历史面板仍用该高度 + 列表内滚动 */
+      body.p5r-characters[data-p5r-page="contact"] {
+        --p5r-contact-panel-h: clamp(680px, 62vh, 900px);
+      }
+      .p5r-contactPanels {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        min-height: var(--p5r-contact-panel-h);
+        height: auto;
+        box-sizing: border-box;
+      }
+      .p5r-contactPanel:not([hidden]) {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+      /* 提交：不裁切、不在 form 内出现滚动条 */
+      #contactPanelForm.p5r-contactPanel:not([hidden]) {
+        position: relative;
+        min-height: var(--p5r-contact-panel-h);
+        height: auto;
+        max-height: none;
+        overflow: visible;
+      }
+      #contactPanelForm .p5r-contactForm {
+        flex: 0 0 auto;
+        min-height: 0;
+        overflow: visible;
+      }
+      /* 历史：外框高度与变量一致，仅列表区域滚动 */
+      #contactPanelHistory.p5r-contactPanel:not([hidden]) {
+        height: var(--p5r-contact-panel-h);
+        min-height: var(--p5r-contact-panel-h);
+        max-height: var(--p5r-contact-panel-h);
+        overflow: hidden;
+      }
+      .p5r-historyTopRow {
+        flex-shrink: 0;
+      }
+      .p5r-historyListWrap {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .p5r-contactForm .p5r-field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      /* 错误行固定占位：避免出现错误时表单区突然增高（与有文案时同高） */
+      #contactPanelForm .p5r-fieldError {
+        margin: 0;
+        min-height: calc(1.45em * 2 + 10px);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        line-height: 1.45;
+        color: #ff8899;
+        text-shadow: 0 0 14px rgba(255, 0, 34, 0.45);
+        box-sizing: border-box;
+        display: block;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+      #contactPanelForm .p5r-fieldError.p5r-fieldError--empty {
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #contactPanelForm .p5r-fieldError:not(.p5r-fieldError--empty) {
+        visibility: visible;
+      }
+      .p5r-contactForm .p5r-input.p5r-input--invalid {
+        border-color: rgba(255, 0, 34, 0.65);
+        box-shadow: 0 0 0 2px rgba(255, 0, 34, 0.2);
+      }
+      .p5r-contactForm .p5r-field__label {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .p5r-contactForm .p5r-input {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        padding: 10px 12px;
+        outline: none;
+      }
+      .p5r-contactForm .p5r-input:focus {
+        border-color: rgba(28, 254, 255, 0.65);
+        box-shadow: 0 0 0 3px rgba(28, 254, 255, 0.2);
+      }
+      .p5r-contactForm textarea.p5r-input {
+        min-height: 120px;
+        max-height: 200px;
+        resize: none;
+      }
+      .p5r-fileZone {
+        border: 2px dashed rgba(255, 255, 255, 0.28);
+        border-radius: 12px;
+        padding: 22px 16px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+      .p5r-fileZone:hover {
+        border-color: rgba(28, 254, 255, 0.55);
+        background: rgba(28, 254, 255, 0.06);
+      }
+      .p5r-fileZone.dragover {
+        border-color: rgba(255, 0, 34, 0.75);
+        background: rgba(255, 0, 34, 0.08);
+      }
+      .p5r-fileZoneHint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .p5r-fileList {
+        margin-top: 10px;
+        display: grid;
+        gap: 8px;
+      }
+      .p5r-fileItem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 8px;
+        border-left: 3px solid rgba(28, 254, 255, 0.75);
+      }
+      .p5r-fileItem .file-info {
+        font-size: 12px;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.65);
+      }
+      .p5r-historyItem .muted {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      /* 浮在表单卡片右下角，不占文档流高度 */
+      .p5r-contactSubmitSuccess {
+        position: absolute;
+        right: 16px;
+        bottom: 16px;
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #ffffff;
+        text-align: right;
+        line-height: 1.35;
+        white-space: nowrap;
+        z-index: 2;
+        pointer-events: none;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.65);
+      }
+      .p5r-contactSubmitSuccess[hidden] {
+        display: none !important;
+      }
+      .p5r-contactActions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .p5r-historyTopRow {
+        flex-shrink: 0;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .p5r-historyTopRow select {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        min-width: 120px;
+      }
+      .p5r-historyClearRow {
+        flex-shrink: 0;
+        margin-top: auto;
+        padding-top: 18px;
+        text-align: center;
+      }
+      .p5r-historyItem {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      .p5r-historyItem__del {
+        flex-shrink: 0;
+        align-self: stretch;
+        width: 44px;
+        min-height: 52px;
+        margin: 0;
+        padding: 0;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(0, 0, 0, 0.55);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      }
+      .p5r-historyItem__del:hover {
+        border-color: rgba(255, 0, 34, 0.55);
+        background: rgba(40, 0, 8, 0.65);
+        color: #ffb3be;
+      }
+      .p5r-historyItem__del:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(28, 254, 255, 0.45);
+      }
+      .p5r-historyItem__del:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .p5r-historyItem__main {
+        flex: 1;
+        min-width: 0;
+      }
+      .p5r-statusBadge {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: rgba(255, 0, 34, 0.2);
+        color: #ff8899;
+      }
+      .p5r-statusBadge.processed {
+        background: rgba(28, 254, 255, 0.2);
+        color: #7efcff;
+      }
+      /* 页脚样式与人物页一致（characters.css 仅绑定了 characters 页） */
+      body.p5r-characters[data-p5r-page="contact"] .p5r-pageFooter {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 32px;
+        padding: 18px 20px 22px;
+        background: #4a0a12;
+        text-align: center;
+      }
+      body.p5r-characters[data-p5r-page="contact"] .p5r-pageFooter__inner {
+        margin: 0 auto;
+        max-width: 640px;
+      }
+      body.p5r-characters[data-p5r-page="contact"] .p5r-pageFooter__line {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.7;
+        letter-spacing: 0.05em;
+        color: rgba(255, 245, 245, 0.9);
+      }
+      body.p5r-characters[data-p5r-page="contact"] .p5r-pageFooter a {
+        color: #ffc8d0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        word-break: break-all;
+      }
+      body.p5r-characters[data-p5r-page="contact"] .p5r-pageFooter a:hover {
+        color: #fff;
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      /* 顶栏：扩展页面下拉（与 p5 顶栏对比度一致） */
+      /* 联系页主内容：位于「玩家反馈」说明区之下（非顶栏） */
+    </style>
+  </head>
+
+  <body class="p5r-characters" data-p5r-page="contact">
+    <header class="p5r-header" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a
+                class="p5-btn-ctn p5-hover-animation-mix p5r-headerNav__item is-current"
+                href="contact.html"
+                aria-current="page"
+                >联系</a
+              >
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="p5r-shell">
+      <section class="p5r-banner" aria-label="banner">
+        <img
+          class="p5r-banner__bg"
+          src="../../../shared/p5ui/assets/doc-build/bg1.b9635d84.png"
+          alt=""
+        />
+        <div class="p5r-banner__veil" aria-hidden="true"></div>
+      </section>
+
+      <main class="p5r-main p5r-contactMain" aria-label="玩家反馈">
+        <div class="p5r-contactInner">
+          <section class="p5r-contactCard p5r-contactHero" aria-label="玩家反馈说明">
+            <h1 class="p5-title-ctn p5r-contactPageTitle">
+              <span class="p5r-staggerTitle__track">
+                <span class="p5r-staggerTitle__ch">玩</span>
+                <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">家</span>
+                <span class="p5r-staggerTitle__ch">反</span>
+                <span class="p5r-staggerTitle__ch">馈</span>
+              </span>
+            </h1>
+            <div class="p5r-contactLead">
+              <p>请在此提交您的反馈、建议或问题。</p>
+              <p>我们会尽快处理您的请求，感谢您对怪盗团的支持！</p>
+            </div>
+          </section>
+
+          <div class="p5r-contactFormSection" aria-label="提交与历史">
+            <div class="p5r-contactFormBar">
+              <h2 class="p5-title-ctn p5r-contactHeading" id="contactHeadingForm">
+                <span class="p5r-staggerTitle__track">
+                  <span class="p5r-staggerTitle__ch">提</span>
+                  <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">交</span>
+                  <span class="p5r-staggerTitle__ch">表</span>
+                  <span class="p5r-staggerTitle__ch">单</span>
+                </span>
+              </h2>
+              <h2 class="p5-title-ctn p5r-contactHeading" id="contactHeadingHistory" hidden>
+                <span class="p5r-staggerTitle__track">
+                  <span class="p5r-staggerTitle__ch">历</span>
+                  <span class="p5r-staggerTitle__ch p5r-staggerTitle__ch--invert">史</span>
+                  <span class="p5r-staggerTitle__ch">记</span>
+                  <span class="p5r-staggerTitle__ch">录</span>
+                </span>
+              </h2>
+              <button
+                type="button"
+                class="p5r-contactHistoryTab"
+                id="historyToggle"
+                aria-pressed="false"
+                aria-controls="contactPanelHistory"
+              >
+                历史
+              </button>
+            </div>
+
+            <div class="p5r-contactPanels">
+            <div id="contactPanelForm" class="p5r-contactCard p5r-contactPanel">
+              <form id="contactForm" class="p5r-contactForm" novalidate>
+                <div class="p5r-field">
+                  <label class="p5r-field__label" for="cNick">昵称</label>
+                  <input id="cNick" class="p5r-input" name="nick" type="text" autocomplete="nickname" placeholder="请输入昵称" required />
+                  <p id="errNick" class="p5r-fieldError p5r-fieldError--empty" aria-hidden="true"></p>
+                </div>
+
+                <div class="p5r-field">
+                  <label class="p5r-field__label" for="cMail">邮箱</label>
+                  <input
+                    id="cMail"
+                    class="p5r-input"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                    required
+                  />
+                  <p id="errMail" class="p5r-fieldError p5r-fieldError--empty" aria-hidden="true"></p>
+                </div>
+
+                <div class="p5r-field">
+                  <label class="p5r-field__label" for="cMsg">反馈内容</label>
+                  <textarea
+                    id="cMsg"
+                    class="p5r-input"
+                    name="message"
+                    rows="6"
+                    placeholder="请描述您遇到的问题、建议或想对怪盗团说的话……"
+                    required
+                  ></textarea>
+                  <p id="errMsg" class="p5r-fieldError p5r-fieldError--empty" aria-hidden="true"></p>
+                </div>
+
+                <div class="p5r-field">
+                  <span class="p5r-field__label">附件上传（可选）</span>
+                  <div class="p5r-fileZone" id="dropZone" role="button" tabindex="0" aria-label="拖放或点击上传附件">
+                    <div style="font-size: 40px; line-height: 1; margin-bottom: 8px" aria-hidden="true">📎</div>
+                    <div style="font-weight: 800; margin-bottom: 4px">拖放文件到此处</div>
+                    <div style="font-size: 13px; color: rgba(255,255,255,.75)">
+                      或 <span id="browseFiles" style="color: #1cfeff; text-decoration: underline; cursor: pointer">点击浏览</span>
+                    </div>
+                    <div class="p5r-fileZoneHint">支持图片与视频；单个 ≤ 10MB；最多 5 个文件</div>
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*" hidden />
+                  </div>
+                  <div class="p5r-fileList" id="fileList"></div>
+                  <div class="p5r-fileZoneHint" style="display: flex; justify-content: space-between; margin-top: 6px">
+                    <span id="fileCount">已选择 0 个文件</span>
+                    <span id="totalSize">总大小: 0 Bytes</span>
+                  </div>
+                  <p id="errFiles" class="p5r-fieldError p5r-fieldError--empty" aria-hidden="true"></p>
+                </div>
+
+                <div class="p5r-contactActions">
+                  <button class="p5-btn-ctn p5-hover-animation-mix" type="submit">提交反馈</button>
+                  <button class="p5-btn-ctn p5-hover-animation-gray" type="reset">重置</button>
+                </div>
+              </form>
+              <p id="contactSubmitSuccess" class="p5r-contactSubmitSuccess" role="status" aria-live="polite" hidden>
+                提交成功
+              </p>
+            </div>
+
+            <div id="contactPanelHistory" class="p5r-contactCard p5r-contactPanel" hidden>
+              <div class="p5r-historyTopRow">
+                <label for="historyFilter" class="visually-hidden">筛选</label>
+                <select id="historyFilter" aria-label="筛选历史记录">
+                  <option value="all">全部记录</option>
+                  <option value="today">今天</option>
+                  <option value="week">本周</option>
+                </select>
+              </div>
+              <div id="historyList" class="p5r-historyListWrap"></div>
+              <div class="p5r-historyClearRow">
+                <button class="p5-btn-ctn p5-hover-animation-gray" type="button" id="clearHistory">清除历史</button>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="p5r-pageFooter" role="contentinfo">
+      <div class="p5r-pageFooter__inner">
+        <p class="p5r-pageFooter__line">玩家反馈 · 怪盗团联络通道</p>
+      </div>
+    </footer>
+
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display: none">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="p5MsgHost"></div>
+
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display: none">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom" />
+        <img class="p5-zoom-close" src="../../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close" />
+      </div>
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script>
+      (function () {
+        "use strict";
+        var banner = document.querySelector(".p5r-banner");
+        var bannerBg = banner && banner.querySelector(".p5r-banner__bg");
+        var reduceMotion =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (banner && bannerBg && !reduceMotion) {
+          var maxTranslate = 14;
+          var maxTilt = 5;
+          var parallaxIdle = "translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1)";
+          function applyBannerParallax(e) {
+            var rect = banner.getBoundingClientRect();
+            var zoneTop = Math.max(0, rect.top);
+            var zoneBottom = rect.bottom;
+            if (zoneBottom <= 0 || zoneTop >= window.innerHeight) {
+              bannerBg.style.transform = parallaxIdle;
+              return;
+            }
+            if (e.clientY < zoneTop - 24 || e.clientY > zoneBottom + 48) {
+              bannerBg.style.transform = parallaxIdle;
+              return;
+            }
+            var cx = rect.left + rect.width / 2;
+            var zoneMidY = (zoneTop + zoneBottom) / 2;
+            var halfW = Math.max(1, rect.width / 2);
+            var halfH = Math.max(1, (zoneBottom - zoneTop) / 2);
+            var dx = (e.clientX - cx) / halfW;
+            var dy = (e.clientY - zoneMidY) / halfH;
+            dx = Math.max(-1, Math.min(1, dx));
+            dy = Math.max(-1, Math.min(1, dy));
+            var tx = -dx * maxTranslate;
+            var ty = -dy * maxTranslate;
+            var rx = dy * maxTilt;
+            var ry = -dx * maxTilt;
+            bannerBg.style.transform =
+              "translate3d(" +
+              tx +
+              "px," +
+              ty +
+              "px,0) rotateX(" +
+              rx +
+              "deg) rotateY(" +
+              ry +
+              "deg) scale(1.05)";
+          }
+          document.addEventListener("mousemove", applyBannerParallax);
+          window.addEventListener("blur", function () {
+            bannerBg.style.transform = parallaxIdle;
+          });
+        }
+
+        var headerBar = document.querySelector(".p5r-header");
+        var bannerEl = document.querySelector(".p5r-banner");
+        function syncHeaderBar() {
+          if (!headerBar) return;
+          if (!bannerEl) {
+            headerBar.classList.add("p5r-header--solid");
+            return;
+          }
+          var pastBanner = bannerEl.getBoundingClientRect().bottom <= 0;
+          headerBar.classList.toggle("p5r-header--solid", pastBanner);
+        }
+        window.addEventListener("scroll", syncHeaderBar, { passive: true });
+        syncHeaderBar();
+
+        function tiltStaggerChars() {
+          var nodes = document.querySelectorAll(".p5r-contactMain .p5r-staggerTitle__ch");
+          for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            var rot = Math.random() * 14 - 7;
+            var skew = Math.random() * 8 - 4;
+            el.style.transform = "rotate(" + rot.toFixed(1) + "deg) skewX(" + skew.toFixed(1) + "deg)";
+          }
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", tiltStaggerChars);
+        } else {
+          tiltStaggerChars();
+        }
+      })();
+    </script>
+    <script src="./player2.js"></script>
+  </body>
+</html>

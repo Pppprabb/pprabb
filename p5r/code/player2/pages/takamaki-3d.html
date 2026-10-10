@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>火箭射击</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../../player4/characters.css" />
+    <style>
+      body.p5r-characters[data-p5r-page="player2-canvas-game"] {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      body.p5r-characters[data-p5r-page="player2-canvas-game"] .p5r-photoStageMain.p2-cvg-main {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        padding-top: calc(var(--p5r-h) + var(--p5r-blockGap));
+        padding-left: var(--p5r-edgePad);
+        padding-right: var(--p5r-edgePad);
+        padding-bottom: 32px;
+        box-sizing: border-box;
+        min-height: 0;
+      }
+      .p2-cvg-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .p2-cvg-toolbar .p5-btn-ctn {
+        min-width: 120px;
+      }
+      .p2-cvg-meta {
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.78);
+        margin-bottom: 10px;
+      }
+      .p2-cvg-board {
+        margin: 0 auto;
+        max-width: 400px;
+        border-radius: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 0, 34, 0.08);
+        overflow: hidden;
+      }
+      .p2-cvg-canvas {
+        display: block;
+        width: 100%;
+        height: min(52vh, 440px);
+        min-height: 300px;
+        touch-action: none;
+        cursor: pointer;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .p2-cvg-canvas {
+          cursor: default;
+        }
+      }
+    </style>
+  </head>
+  <body class="p5r-characters" data-p5r-page="player2-canvas-game">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="contact.html">联系</a>
+              <a
+                class="p5-btn-ctn p5-hover-animation-mix p5r-headerNav__item is-current"
+                href="takamaki-3d.html"
+                aria-current="page"
+                >小游戏</a
+              >
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button
+                type="button"
+                class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn"
+                data-p5r-logout
+              >
+                退出
+              </button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="p5r-photoStageMain p2-cvg-main" aria-label="火箭射击">
+      <div class="p2-cvg-meta" id="p2CvgMeta" aria-live="polite">得分：0　最高：0</div>
+      <div class="p2-cvg-toolbar">
+        <button type="button" class="p5-btn-ctn p5-hover-animation-mix" id="p2CvgStart">开始 / 继续</button>
+        <button type="button" class="p5-btn-ctn p5-hover-animation-gray" id="p2CvgPause">暂停</button>
+        <button type="button" class="p5-btn-ctn p5-hover-animation-gray" id="p2CvgReset">重新开始</button>
+      </div>
+      <div class="p2-cvg-board">
+        <canvas id="p2CvgCanvas" class="p2-cvg-canvas" width="360" height="420" aria-label="火箭射击"></canvas>
+      </div>
+    </main>
+
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display: none">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("p2CvgCanvas");
+        var meta = document.getElementById("p2CvgMeta");
+        var btnStart = document.getElementById("p2CvgStart");
+        var btnPause = document.getElementById("p2CvgPause");
+        var btnReset = document.getElementById("p2CvgReset");
+        if (!canvas || !meta || !btnStart || !btnPause || !btnReset) return;
+        var ctx = canvas.getContext && canvas.getContext("2d");
+        if (!ctx) return;
+
+        var storageKey = "p2-canvasRocketGame-hi";
+        var hi = 0;
+        try {
+          hi = parseInt(localStorage.getItem(storageKey) || "0", 10) || 0;
+        } catch (e) {
+          hi = 0;
+        }
+
+        var dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        var w = 360;
+        var h = 420;
+
+        function resize() {
+          var r = canvas.getBoundingClientRect();
+          w = Math.max(1, Math.floor(r.width));
+          h = Math.max(1, Math.floor(r.height));
+          var tw = w * dpr;
+          var th = h * dpr;
+          if (canvas.width !== tw || canvas.height !== th) {
+            canvas.width = tw;
+            canvas.height = th;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
+        }
+
+        var running = false;
+        var raf = 0;
+        var lastT = 0;
+        var score = 0;
+        var over = false;
+        var keys = { left: false, right: false };
+        var player = { x: 0, y: 0, halfW: 18, nose: 22, tail: 16 };
+        var bullets = [];
+        var enemies = [];
+        var spawnTimer = 0;
+        var fireTimer = 0;
+        var pointerActive = false;
+        var pointerTargetX = 0;
+
+        function rnd(a, b) {
+          return a + Math.random() * (b - a);
+        }
+
+        function clamp(v, a, b) {
+          return Math.max(a, Math.min(b, v));
+        }
+
+        function updateMeta() {
+          meta.textContent = "得分：" + score + "　最高：" + hi + (over ? "　（坠毁）" : "");
+        }
+
+        function placePlayer() {
+          player.x = w * 0.5;
+          player.y = h * 0.88;
+          pointerTargetX = player.x;
+        }
+
+        function resetGame() {
+          score = 0;
+          over = false;
+          bullets = [];
+          enemies = [];
+          spawnTimer = 0.55;
+          fireTimer = 0;
+          lastT = 0;
+          keys.left = false;
+          keys.right = false;
+          pointerActive = false;
+          resize();
+          placePlayer();
+          updateMeta();
+          draw(0);
+        }
+
+        function spawnEnemy() {
+          var r = rnd(14, 22);
+          var fall = 52 + Math.min(220, score * 3.2 + (score > 25 ? (score - 25) * 1.8 : 0));
+          enemies.push({
+            x: rnd(r + 8, w - r - 8),
+            y: -r - 4,
+            r: r,
+            vy: fall,
+            vx: rnd(-28, 28) * (0.35 + Math.min(1, score * 0.02)),
+            rot: rnd(0, 6.28)
+          });
+        }
+
+        function dist2(ax, ay, bx, by) {
+          var dx = ax - bx;
+          var dy = ay - by;
+          return dx * dx + dy * dy;
+        }
+
+        function enemyHitPlayer(e) {
+          var cx = player.x;
+          var cy = player.y - 6;
+          var rr = e.r + 17;
+          return dist2(e.x, e.y, cx, cy) < rr * rr;
+        }
+
+        function drawRocket(ts) {
+          var px = player.x;
+          var py = player.y;
+          var flick = 8 + Math.sin((ts || 0) * 0.018) * 3.5;
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.fillStyle = "rgba(28, 254, 255, 0.95)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(0, -player.nose);
+          ctx.lineTo(-player.halfW, player.tail);
+          ctx.lineTo(player.halfW, player.tail);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "rgba(255, 60, 90, 0.75)";
+          ctx.beginPath();
+          ctx.moveTo(-6, player.tail - 2);
+          ctx.lineTo(0, player.tail + flick);
+          ctx.lineTo(6, player.tail - 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function draw(ts) {
+          resize();
+          if (!player.y) placePlayer();
+          ctx.clearRect(0, 0, w, h);
+
+          var g = ctx.createLinearGradient(0, 0, w, h);
+          g.addColorStop(0, "rgba(12, 8, 32, 0.95)");
+          g.addColorStop(0.55, "rgba(26, 6, 40, 0.92)");
+          g.addColorStop(1, "rgba(0, 0, 0, 0.96)");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+
+          ctx.strokeStyle = "rgba(255, 0, 68, 0.08)";
+          ctx.lineWidth = 1;
+          var sx;
+          for (sx = (ts * 0.02) % 40; sx < w + 40; sx += 40) {
+            ctx.beginPath();
+            ctx.moveTo(sx, 0);
+            ctx.lineTo(sx - 30, h);
+            ctx.stroke();
+          }
+
+          var i;
+          var b;
+          for (i = 0; i < bullets.length; i++) {
+            b = bullets[i];
+            ctx.fillStyle = "rgba(255, 240, 200, 0.95)";
+            ctx.shadowColor = "rgba(28, 254, 255, 0.5)";
+            ctx.shadowBlur = 8;
+            ctx.fillRect(b.x - 1.5, b.y - 8, 3, 14);
+            ctx.shadowBlur = 0;
+          }
+
+          var e;
+          for (i = 0; i < enemies.length; i++) {
+            e = enemies[i];
+            ctx.save();
+            ctx.translate(e.x, e.y);
+            ctx.rotate(e.rot + (ts || 0) * 0.0012 * (i % 2 ? 1 : -1));
+            var rg = ctx.createRadialGradient(0, 0, 2, 0, 0, e.r);
+            rg.addColorStop(0, "rgba(255, 120, 140, 0.95)");
+            rg.addColorStop(0.55, "rgba(180, 20, 60, 0.9)");
+            rg.addColorStop(1, "rgba(60, 0, 20, 0.85)");
+            ctx.fillStyle = rg;
+            ctx.beginPath();
+            ctx.moveTo(e.r, 0);
+            for (var k = 1; k < 6; k++) {
+              var ang = (k * Math.PI * 2) / 5 - Math.PI / 2;
+              ctx.lineTo(Math.cos(ang) * e.r * 0.88, Math.sin(ang) * e.r * 0.88);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          drawRocket(ts);
+
+          if (!running && !over) {
+            ctx.fillStyle = "rgba(255,255,255,0.82)";
+            ctx.font = "bold 14px system-ui, -apple-system, Segoe UI, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("点「开始 / 继续」或按空格", w / 2, h * 0.42);
+          }
+          if (over) {
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.font = "900 16px system-ui, -apple-system, Segoe UI, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("坠毁", w / 2, h * 0.44);
+            ctx.font = "13px system-ui, -apple-system, Segoe UI, sans-serif";
+            ctx.fillText("点「重新开始」", w / 2, h * 0.44 + 22);
+          }
+        }
+
+        function step(ts) {
+          if (!running || over) return;
+          if (!lastT) lastT = ts;
+          var dt = Math.min(0.045, (ts - lastT) / 1000);
+          lastT = ts;
+
+          var moveSpd = 240 + Math.min(160, score * 2.4);
+          if (pointerActive) {
+            player.x += (pointerTargetX - player.x) * Math.min(1, dt * 10);
+          } else {
+            if (keys.left) player.x -= moveSpd * dt;
+            if (keys.right) player.x += moveSpd * dt;
+          }
+          player.x = clamp(player.x, player.halfW + 6, w - player.halfW - 6);
+
+          fireTimer -= dt;
+          var fireEvery = Math.max(0.1, 0.22 - Math.min(0.09, score * 0.002));
+          if (fireTimer <= 0) {
+            fireTimer = fireEvery;
+            bullets.push({ x: player.x, y: player.y - player.nose - 2, vy: -520 - Math.min(180, score * 2) });
+          }
+
+          spawnTimer -= dt;
+          var spawnEvery = Math.max(0.35, 1.05 - score * 0.012);
+          if (spawnTimer <= 0) {
+            spawnTimer = spawnEvery;
+            spawnEnemy();
+          }
+
+          var i;
+          var j;
+          var b;
+          var e;
+          var hit;
+          for (i = bullets.length - 1; i >= 0; i--) {
+            b = bullets[i];
+            b.y += b.vy * dt;
+            if (b.y < -20) {
+              bullets.splice(i, 1);
+              continue;
+            }
+            hit = false;
+            for (j = enemies.length - 1; j >= 0; j--) {
+              e = enemies[j];
+              if (dist2(b.x, b.y, e.x, e.y) < (e.r + 5) * (e.r + 5)) {
+                enemies.splice(j, 1);
+                hit = true;
+                score += 1;
+                if (score > hi) {
+                  hi = score;
+                  try {
+                    localStorage.setItem(storageKey, String(hi));
+                  } catch (e2) {}
+                }
+                updateMeta();
+                break;
+              }
+            }
+            if (hit) bullets.splice(i, 1);
+          }
+
+          for (i = enemies.length - 1; i >= 0; i--) {
+            e = enemies[i];
+            e.y += e.vy * dt;
+            e.x += e.vx * dt;
+            e.x = clamp(e.x, e.r + 4, w - e.r - 4);
+            if (e.y - e.r > h + 40) {
+              enemies.splice(i, 1);
+              continue;
+            }
+            if (enemyHitPlayer(e)) {
+              over = true;
+              running = false;
+              updateMeta();
+              raf = 0;
+              draw(ts);
+              return;
+            }
+          }
+
+          draw(ts);
+          if (running && !over) {
+            raf = requestAnimationFrame(step);
+          } else {
+            raf = 0;
+          }
+        }
+
+        function startOrResume() {
+          if (over) return;
+          if (running && raf) return;
+          running = true;
+          lastT = 0;
+          raf = requestAnimationFrame(step);
+        }
+
+        function pauseGame() {
+          running = false;
+          pointerActive = false;
+          if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+          draw(performance.now());
+        }
+
+        btnStart.addEventListener("click", function () {
+          if (over) return;
+          startOrResume();
+        });
+        btnPause.addEventListener("click", function () {
+          pauseGame();
+        });
+        btnReset.addEventListener("click", function () {
+          pauseGame();
+          resetGame();
+        });
+
+        canvas.addEventListener(
+          "pointerdown",
+          function (e) {
+            if (over) return;
+            if (!running) {
+              startOrResume();
+            }
+            pointerActive = true;
+            var r = canvas.getBoundingClientRect();
+            pointerTargetX = clamp(((e.clientX - r.left) / r.width) * w, player.halfW + 6, w - player.halfW - 6);
+          },
+          { passive: true }
+        );
+        canvas.addEventListener(
+          "pointermove",
+          function (e) {
+            if (!pointerActive || over) return;
+            var r = canvas.getBoundingClientRect();
+            pointerTargetX = clamp(((e.clientX - r.left) / r.width) * w, player.halfW + 6, w - player.halfW - 6);
+          },
+          { passive: true }
+        );
+        function pointerEnd() {
+          pointerActive = false;
+        }
+        canvas.addEventListener("pointerup", pointerEnd);
+        canvas.addEventListener("pointercancel", pointerEnd);
+        canvas.addEventListener("pointerleave", pointerEnd);
+
+        window.addEventListener("keydown", function (e) {
+          if (e.code === "Space") {
+            e.preventDefault();
+            if (!over) {
+              if (running) pauseGame();
+              else startOrResume();
+            }
+            return;
+          }
+          if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = true;
+          if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = true;
+        });
+        window.addEventListener("keyup", function (e) {
+          if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = false;
+          if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = false;
+        });
+
+        window.addEventListener("resize", function () {
+          placePlayer();
+          draw(performance.now());
+        });
+
+        resetGame();
+        updateMeta();
+      })();
+    </script>
+  </body>
+</html>

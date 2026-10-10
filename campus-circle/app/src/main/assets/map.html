@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>校园互助地图</title>
+
+    <!-- ✅ 高德安全配置（必须放在前面） -->
+    <script>
+        window._AMapSecurityConfig = {
+            securityJsCode: "c102d7fd56e50fc672d01a6cc7252f5d"
+        };
+    </script>
+
+    <!-- ✅ 高德 JS API -->
+    <script src="https://webapi.amap.com/maps?v=2.0&key=ef969c4dbc219cc486137173ae604f6a"></script>
+
+    <style>
+        html, body, #container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .user-marker {
+            width: 18px;
+            height: 18px;
+            background: #1890ff;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0,0,0,.4);
+        }
+        .task-marker {
+            width: 12px;
+            height: 12px;
+            background: red;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+
+<script>
+    let map;
+    let userMarker;
+    let taskMarkers = [];
+    let mapInitialized = false;
+
+    // 页面加载时先初始化一个默认地图，确保瓦片资源能被请求和渲染
+    window.addEventListener('load', function() {
+        try {
+            // 默认中心：浙江工业大学屏峰校区 (lng, lat)
+            initMap(120.041114, 30.228378);
+        } catch (e) {
+            console.warn('initMap fail on load', e);
+        }
+    });
+
+    /* ✅ 初始化地图 */
+    function initMap(lng, lat) {
+        // 默认缩放级别设为 19，接近 100 米可视范围
+        map = new AMap.Map('container', {
+            zoom: 19,
+            center: [lng, lat]
+        });
+
+        userMarker = new AMap.Marker({
+            position: [lng, lat],
+            content: '<div class="user-marker"></div>',
+            offset: new AMap.Pixel(-9, -9)
+        });
+        map.add(userMarker);
+        mapInitialized = true;
+
+        // 锁定地图到屏峰校区小范围：固定中心与缩放级别，禁止放大/缩小超出范围
+        try {
+            const campusLng = 120.041114;
+            const campusLat = 30.228378;
+            map.setCenter([campusLng, campusLat]);
+            map.setZoom(19);
+            // 限制最小/最大缩放为同一值可以锁定缩放
+            if (typeof map.setMinZoom === 'function') map.setMinZoom(19);
+            if (typeof map.setMaxZoom === 'function') map.setMaxZoom(19);
+            // 禁用滚轮和双击进一步防止视野变动
+            if (map && typeof map.setStatus === 'function') {
+                map.setStatus({
+                    scrollWheel: false,
+                    doubleClick: false,
+                    dragEnable: true,
+                    zoomEnable: false
+                });
+            }
+        } catch (err) {
+            console.warn('lock map range failed', err);
+        }
+
+        // 添加放大/缩小控件和比例尺，启用鼠标滚轮与双击缩放（手势）
+        try {
+            AMap.plugin(['AMap.ToolBar','AMap.Scale'], function(){
+                const toolBar = new AMap.ToolBar({ liteStyle: true });
+                const scale = new AMap.Scale();
+                map.addControl(toolBar);
+                map.addControl(scale);
+            });
+            // 确保启用滚轮缩放与双击缩放
+            if (map && typeof map.setStatus === 'function') {
+                map.setStatus({
+                    scrollWheel: true,
+                    doubleClick: true,
+                    dragEnable: true,
+                    zoomEnable: true
+                });
+            }
+        } catch (err) {
+            console.warn('add controls failed', err);
+        }
+
+        // 监听 WebGL 上下文丢失，尝试重新初始化地图并重绘标记
+        try {
+            const canvas = document.querySelector('#container canvas');
+            if (canvas) {
+                canvas.addEventListener('webglcontextlost', function (e) {
+                    e.preventDefault();
+                    console.warn('webglcontextlost detected, reinit map');
+                    // 延迟重建，避免与其他操作冲突
+                    setTimeout(() => {
+                        try {
+                            // 记录当前中心和 zoom
+                            const center = map.getCenter();
+                            const zoom = map.getZoom();
+                            map.destroy();
+                            map = null;
+                            mapInitialized = false;
+                            initMap(center.lng || center[0], center.lat || center[1]);
+                            map.setZoom(zoom);
+                            // 重新添加任务标记（如果有）
+                            if (taskMarkers && taskMarkers.length) {
+                                taskMarkers.forEach(m => m.setMap(map));
+                            }
+                            if (userMarker) userMarker.setMap(map);
+                        } catch (err) {
+                            console.error('reinit map failed', err);
+                        }
+                    }, 500);
+                }, false);
+            }
+        } catch (err) {
+            console.warn('attach webglcontextlost listener failed', err);
+        }
+
+        // 如果页面以 pick=1 打开，则启用点击选点回调
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('pick') === '1') {
+                map.on('click', function(e) {
+                    try {
+                        const lng = e.lnglat.lng;
+                        const lat = e.lnglat.lat;
+                        // 显示临时标记
+                        if (window._pickMarker) window._pickMarker.setMap(null);
+                        window._pickMarker = new AMap.Marker({ position: [lng, lat], content: '<div class="task-marker" style="background:orange;width:16px;height:16px;border-radius:50%;border:2px solid #fff"></div>', offset: new AMap.Pixel(-8, -8) });
+                        window._pickMarker.setMap(map);
+                        // 回调宿主应用
+                        if (window.AndroidBridge && typeof window.AndroidBridge.onPick === 'function') {
+                            window.AndroidBridge.onPick(String(lng), String(lat));
+                        } else if (window.AndroidBridge && window.AndroidBridge.onPick) {
+                            // some WebView expose as object method
+                            window.AndroidBridge.onPick(String(lng), String(lat));
+                        }
+                    } catch (err) { console.warn('pick click handler failed', err); }
+                });
+            }
+        } catch (err) { console.warn('enable pick mode failed', err); }
+    }
+
+    /* ✅ 更新用户位置 */
+    function updateUser(lng, lat) {
+        if (!map) {
+            initMap(lng, lat);
+            return;
+        }
+        try {
+            // 使用平滑移动避免强制重绘导致上下文问题
+            if (map && typeof map.panTo === 'function') {
+                map.panTo([lng, lat]);
+            } else if (map && typeof map.setCenter === 'function') {
+                map.setCenter([lng, lat]);
+            }
+            userMarker.setPosition([lng, lat]);
+        } catch (e) {
+            console.warn('updateUser failed, reinit map', e);
+            try {
+                const z = map ? map.getZoom() : 17;
+                map.destroy();
+                mapInitialized = false;
+                initMap(lng, lat);
+                map.setZoom(z);
+            } catch (err) {
+                console.error('reinit in updateUser failed', err);
+            }
+        }
+    }
+
+    /* ✅ 显示任务（来自数据库） */
+    function showTasks(json) {
+        const tasks = JSON.parse(json || '[]');
+        // 清理旧标记
+        try {
+            if (taskMarkers && taskMarkers.length) {
+                taskMarkers.forEach(m => {
+                    try { m.setMap(null); } catch (e) {}
+                });
+            }
+            taskMarkers = [];
+
+            const bounds = [];
+            tasks.forEach(t => {
+                try {
+                    const marker = new AMap.Marker({
+                        position: [t.longitude, t.latitude],
+                        content: '<div class="task-marker"></div>',
+                        offset: new AMap.Pixel(-6, -6)
+                    });
+                    marker.setMap(map);
+                    taskMarkers.push(marker);
+                    bounds.push(new AMap.LngLat(t.longitude, t.latitude));
+
+                    // 点击显示任务详情
+                    marker.on('click', function() {
+                        new AMap.InfoWindow({
+                            content: `<div style="padding:10px;">
+                                        <strong>${t.type}</strong><br/>
+                                        ${t.content}<br/>
+                                        <small>发布者：${t.userName}</small><br/>
+                                        <small>时间：${t.time}</small>
+                                      </div>`,
+                            offset: new AMap.Pixel(0, -30)
+                        }).open(map, marker.getPosition());
+                    });
+                } catch (err) {
+                    console.warn('add task marker failed', err);
+                }
+            });
+
+            // 如果有任务点，则把视野调整到包含所有任务和用户位置，避免只显示单点
+            if (taskMarkers.length) {
+                try {
+                    // setFitView 接收覆盖物数组（Marker 等），传入 Marker 列表而非 LngLat
+                    const overlays = taskMarkers.slice();
+                    if (userMarker) overlays.push(userMarker);
+                    map.setFitView(overlays);
+                } catch (err) {
+                    console.warn('setFitView failed', err);
+                }
+            }
+        } catch (e) {
+            console.error('showTasks failed', e);
+        }
+    }
+
+    /* ✅ 在详情页显示单个任务位置并设置指定缩放级别（用于 TaskDetail） */
+    function showSingleMarker(lng, lat, zoom) {
+        try {
+            // 清除已有任务标记
+            if (taskMarkers && taskMarkers.length) {
+                taskMarkers.forEach(m => { try { m.setMap(null); } catch (e){} });
+            }
+            taskMarkers = [];
+
+            // 创建单个强调样式的标记
+            const marker = new AMap.Marker({
+                position: [parseFloat(lng), parseFloat(lat)],
+                content: '<div class="task-marker" style="width:18px;height:18px;background:#e53935;border-radius:50%;border:3px solid #fff"></div>',
+                offset: new AMap.Pixel(-9, -9)
+            });
+            marker.setMap(map);
+            taskMarkers.push(marker);
+
+            // 调整视野到单点并设置缩放（zoom 为整数级别）
+            if (typeof zoom !== 'number') zoom = parseInt(zoom) || 21;
+            try {
+                // 允许临时改变最小/最大缩放以应用目标缩放
+                if (typeof map.setMinZoom === 'function') map.setMinZoom(Math.max(3, zoom - 2));
+                if (typeof map.setMaxZoom === 'function') map.setMaxZoom(Math.min(22, zoom + 2));
+                map.setCenter([parseFloat(lng), parseFloat(lat)]);
+                map.setZoom(zoom);
+            } catch (err) {
+                console.warn('set zoom/center failed', err);
+            }
+
+            // 打开信息窗显示坐标
+            try {
+                new AMap.InfoWindow({
+                    content: `<div style="padding:8px;">位置：${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}</div>`,
+                    offset: new AMap.Pixel(0, -30)
+                }).open(map, marker.getPosition());
+            } catch (err) { }
+        } catch (e) {
+            console.error('showSingleMarker failed', e);
+        }
+    }
+
+    /* ✅ 自动定位 */
+    AMap.plugin('AMap.Geolocation', () => {
+        const geo = new AMap.Geolocation({
+            enableHighAccuracy: true,
+            timeout: 8000,
+            showButton: true,
+            buttonPosition: 'RB'
+        });
+        // 只有在地图已初始化时才添加控件，避免 map 为 undefined 导致脚本错误
+        if (typeof map !== 'undefined' && map) {
+            map.addControl(geo);
+        }
+        geo.getCurrentPosition((status, res) => {
+            if (status === 'complete') {
+                const { lng, lat } = res.position;
+                updateUser(lng, lat);
+                // ✅ 通知 Android：我定位好了，去查附近任务
+                if (window.AndroidBridge) {
+                    window.AndroidBridge.loadTasks(lng, lat);
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

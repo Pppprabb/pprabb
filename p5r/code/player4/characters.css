@@ -1,0 +1,2363 @@
+:root{
+  --p5r-red:#ff0022;
+  --p5r-black:#0b0b0f;
+  --p5r-white:#ffffff;
+  --p5r-ink:rgba(0,0,0,.35);
+  --p5r-line:rgba(255,255,255,.14);
+  --p5r-h:76px;     /* ~2cm（页眉加倍） */
+  --p5r-banner:114px; /* ~3cm */
+  --p5r-sideW:min(25vw, 360px);
+  --p5r-sideW-right:min(25vw, 360px); /* 右侧宽度为原先的一半 */
+  --p5r-gap:18px;
+  --p5r-blockGap:26px; /* 同栏内组件之间留空（与右侧三块一致） */
+  --p5r-edgePad:20px;   /* 与页面最左/最右边缘的距离 */
+  --p5r-columnPad:20px; /* 左栏靠中间一侧 / 右栏靠中间一侧 与中间区的空隙 */
+  /* 中间栏内容左缘与视口左缘距离（与 .p5r-main 左 padding 一致） */
+  --p5r-main-pad-left: calc(var(--p5r-sideW) + var(--p5r-edgePad) + var(--p5r-columnPad));
+}
+
+html{
+  background: var(--p5r-black);
+  min-height: 100%;
+}
+
+/* 人物页：版心随视口宽度上限 1440px，不出现整页横向拖动 */
+html:has(body.p5r-characters){
+  overflow-x: hidden;
+}
+
+body.p5r-characters{
+  background: var(--p5r-black);
+  color: var(--p5r-white);
+  min-height: 100vh;
+  min-width: 0;
+  margin: 0;
+  overflow-x: hidden;
+  --p5r-page-pad-right: 1cm;
+}
+
+/* 版心：左 1/4 | 中 1/2 | 右 1/4（按栏宽比例），侧栏 sticky */
+.p5r-shell{
+  width: 100%;
+  max-width: 1440px;
+  min-width: 0;
+  margin: 0 auto;
+  /* 顶栏 fixed 叠在 banner 上：不再预留 padding-top，banner 顶与版心顶对齐 */
+  padding: 0 var(--p5r-edgePad) 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--p5r-columnPad);
+  align-items: start;
+}
+.p5r-shell > .p5r-banner{
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.p5r-shell > .p5r-side--left{
+  grid-column: 1;
+  grid-row: 2;
+}
+.p5r-shell > .p5r-main{
+  grid-column: 2;
+  grid-row: 2;
+}
+.p5r-shell > .p5r-side--right{
+  grid-column: 3;
+  grid-row: 2;
+}
+
+/* 「不要再摸啦」/恭喜完成拼图等：视口底部水平居中，自下而上入场 */
+body.p5r-characters .p5-noti-ctn.p5r-noti--bottomQuarter{
+  position: fixed;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: max(20px, 14vh);
+  z-index: 200;
+  margin: 0;
+  transform-origin: 50% 100%;
+  pointer-events: auto;
+}
+
+/* BackTop：与 test/index 相同结构（p5-top-ctn / back-top.png 来自 p5-ui.css），叠在顶栏与侧栏之上 */
+body.p5r-characters #p5BackTop.p5-top-ctn{
+  z-index: 120;
+}
+
+/* Header：叠在 banner 上方、默认全透明；banner 滚出视口后 .p5r-header--solid 黑底 */
+.p5r-header{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* 与联系页同一物理高度（避免 min-height 被内容撑高后两页不一致） */
+  height: var(--p5r-h);
+  min-height: var(--p5r-h);
+  max-height: var(--p5r-h);
+  z-index: 50;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 calc(var(--p5r-edgePad) + 6px);
+  color: var(--p5r-white);
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  transition: background-color .28s ease, box-shadow .28s ease;
+  box-sizing: border-box;
+  /* 避免 WebKit 在窄版心下自动调小文字，导致人物/个人页顶栏看起来比联系页「缩一圈」 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* 人物区顶栏内控件：统一最小触控高度与字号（与联系页顶栏同一套物理尺寸） */
+body.p5r-characters .p5r-header{
+  font-size: 16px;
+}
+body.p5r-characters .p5r-header .p5r-headerNav__summary.p5-btn-ctn,
+body.p5r-characters .p5r-header a.p5r-bulletinNavSolo.p5-btn-ctn,
+body.p5r-characters .p5r-header a.p5r-contactNavSolo.p5-btn-ctn,
+body.p5r-characters .p5r-header a.p5r-contactHeaderSolo.p5-btn-ctn{
+  /* 明确压过 p5-ui .p5-btn-ctn 的 padding:10px 20px，保证与联系页顶栏控件同尺寸 */
+  min-height: 48px;
+  height: 48px;
+  padding: 8px 14px;
+  line-height: 1.25;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  box-sizing: border-box;
+}
+body.p5r-characters .p5r-header .p5r-headerUserName{
+  font-size: 14px;
+}
+.p5r-header--solid{
+  background: var(--p5r-black);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
+}
+.p5r-header__right{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+/* 与 test/index.html 导航一致：flex + 间距 */
+.p5r-header__nav{
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+/* 页眉：人物下拉 — summary/链接均用 p5 闪动按钮（纯 CSS） */
+.p5r-headerNav{
+  position: relative;
+  list-style: none;
+}
+.p5r-headerNav__summary.p5-btn-ctn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background-color: #000;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: .12em;
+  box-sizing: border-box;
+}
+.p5r-headerNav__summary::-webkit-details-marker{
+  display: none;
+}
+.p5r-headerNav__summary::marker{
+  content: "";
+}
+.p5r-headerNav__caret{
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid rgba(255,255,255,.88);
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+.p5r-headerNav[open] .p5r-headerNav__caret{
+  transform: rotate(180deg);
+}
+.p5r-headerNav__panel{
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 168px;
+  padding: 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(11, 11, 15, .96);
+  box-shadow: 0 16px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,0,34,.08);
+  z-index: 60;
+  box-sizing: border-box;
+}
+.p5r-headerNav__item.p5-btn-ctn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  border: none;
+  background-color: #000;
+  text-decoration: none;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .08em;
+  box-sizing: border-box;
+  text-align: center;
+  cursor: pointer;
+}
+.p5r-headerNav__item.is-current{
+  opacity: .78;
+  pointer-events: none;
+  cursor: default;
+}
+body.p5r-characters .p5r-header a.p5r-bulletinNavSolo.p5-btn-ctn.is-current{
+  opacity: .78;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* 照片舞台页：无 banner，仅主内容占位 */
+.p5r-photoStageMain{
+  min-height: 100vh;
+  padding-top: calc(var(--p5r-h) + var(--p5r-blockGap));
+  padding-left: var(--p5r-edgePad);
+  padding-right: var(--p5r-edgePad);
+  padding-bottom: 48px;
+  box-sizing: border-box;
+  /* 与全站黑底一致；红调仅留在过场动画层，退场后不残留「红雾」感 */
+  background-color: var(--p5r-black);
+}
+.p5r-photoStagePlaceholder{
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.55);
+}
+
+/* 照片舞台：进入页全视口雨宫莲动态素材 — SVG mask 多圆「水波挖孔」扩散揭示，溶解退场后再显舞台 */
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro{
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: block;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro[hidden]{
+  display: none !important;
+  pointer-events: none !important;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__maskSvg{
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__bg{
+  position: absolute;
+  inset: 0;
+  /* 过场专用：中性暗底 + 轻微压暗中心，挖孔外不泛红 */
+  background:
+    radial-gradient(ellipse 92% 78% at 50% 48%, rgba(14, 16, 22, 0.72) 0%, rgba(6, 7, 11, 0.96) 58%, #07080c 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__rings{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220vmin;
+  height: 220vmin;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__rings span{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  margin: -50% 0 0 -50%;
+  border-radius: 50%;
+  border: 1px solid rgba(28, 254, 255, 0.18);
+  box-shadow: 0 0 32px rgba(28, 254, 255, 0.1);
+  opacity: 0;
+  transform: scale(0.08);
+  animation: p5rIntroWaterRing 1.4s ease-out infinite;
+  animation-play-state: paused;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__rings span:nth-child(2){
+  animation-delay: 0.2s;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__rings span:nth-child(3){
+  animation-delay: 0.4s;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__rings span{
+  animation-play-state: running;
+}
+@keyframes p5rIntroWaterRing{
+  0%{
+    opacity: 0;
+    transform: scale(0.06);
+  }
+  12%{
+    opacity: 0.45;
+  }
+  100%{
+    opacity: 0;
+    transform: scale(0.55);
+  }
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__frame{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  box-shadow: none;
+  border-radius: 0;
+  opacity: 1;
+  filter: blur(14px) saturate(0.88);
+  transform: scale(1.02);
+  -webkit-mask-image: url(#p5rIntroWaveMask);
+  mask-image: url(#p5rIntroWaveMask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-position: center;
+  mask-position: center;
+  mask-mode: luminance;
+  -webkit-mask-mode: luminance;
+  will-change: filter, transform;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__img{
+  animation: p5rIntroImgDefocusClear 0.6s cubic-bezier(0.33, 0.85, 0.32, 1) forwards;
+}
+@keyframes p5rIntroImgDefocusClear{
+  0%{
+    filter: blur(14px) saturate(0.88);
+    transform: scale(1.04);
+  }
+  50%{
+    filter: blur(5px) saturate(1);
+  }
+  100%{
+    filter: blur(0) saturate(1.02);
+    transform: scale(1);
+  }
+}
+/* 多中心水波挖孔：mask 内白圆用 scale 放大（比动画 r 浏览器兼容更好） */
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__maskHole{
+  transform: scale(0);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes p5rIntroMaskRipScale{
+  from{
+    transform: scale(0);
+  }
+  to{
+    transform: scale(52);
+  }
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__maskHole--1{
+  animation: p5rIntroMaskRipScale 0.44s cubic-bezier(0.33, 0.85, 0.32, 1) 0s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__maskHole--2{
+  animation: p5rIntroMaskRipScale 0.44s cubic-bezier(0.33, 0.85, 0.32, 1) 0.06s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__maskHole--3{
+  animation: p5rIntroMaskRipScale 0.44s cubic-bezier(0.33, 0.85, 0.32, 1) 0.12s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__maskHole--4{
+  animation: p5rIntroMaskRipScale 0.44s cubic-bezier(0.33, 0.85, 0.32, 1) 0.18s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--in .p5r-photoStageIntro__maskHole--5{
+  animation: p5rIntroMaskRipScale 0.44s cubic-bezier(0.33, 0.85, 0.32, 1) 0.24s forwards;
+}
+/* 退场：换用「白底 + 黑圆扩散」mask，多道水波依次盖住画面（不再用雾化 blur） */
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__img{
+  -webkit-mask-image: url(#p5rIntroWaveMaskOut);
+  mask-image: url(#p5rIntroWaveMaskOut);
+  animation: none;
+  filter: blur(0) saturate(1.02);
+  transform: scale(1);
+  opacity: 1;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__maskEat{
+  transform: scale(0);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes p5rIntroMaskEatScale{
+  from{
+    transform: scale(0);
+  }
+  to{
+    transform: scale(56);
+  }
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__maskEat--1{
+  animation: p5rIntroMaskEatScale 0.34s cubic-bezier(0.4, 0.15, 0.2, 1) 0s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__maskEat--2{
+  animation: p5rIntroMaskEatScale 0.34s cubic-bezier(0.4, 0.15, 0.2, 1) 0.03s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__maskEat--3{
+  animation: p5rIntroMaskEatScale 0.34s cubic-bezier(0.4, 0.15, 0.2, 1) 0.06s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__maskEat--4{
+  animation: p5rIntroMaskEatScale 0.34s cubic-bezier(0.4, 0.15, 0.2, 1) 0.09s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__maskEat--5{
+  animation: p5rIntroMaskEatScale 0.34s cubic-bezier(0.4, 0.15, 0.2, 1) 0.12s forwards;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__rings span{
+  animation-play-state: paused;
+  opacity: 0;
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__bg{
+  animation: p5rIntroBgFade 0.46s ease forwards;
+}
+@keyframes p5rIntroBgFade{
+  to{
+    opacity: 0;
+  }
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStage.p5r-photoStage--introPending{
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  filter: blur(18px);
+  transform: scale(0.97);
+}
+body[data-p5r-page="photo-stage"] .p5r-photoStage.p5r-photoStage--in{
+  visibility: visible;
+  pointer-events: auto;
+  animation: p5rStageWaterReveal 0.5s cubic-bezier(0.35, 0.82, 0.25, 1) forwards;
+}
+@keyframes p5rStageWaterReveal{
+  0%{
+    opacity: 0;
+    filter: blur(18px);
+    transform: scale(0.97);
+  }
+  55%{
+    opacity: 0.85;
+    filter: blur(6px);
+  }
+  100%{
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  body[data-p5r-page="photo-stage"] .p5r-photoStageIntro{
+    display: none !important;
+  }
+  body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__rings span{
+    animation: none !important;
+  }
+  body[data-p5r-page="photo-stage"] .p5r-photoStageIntro__img,
+  body[data-p5r-page="photo-stage"] .p5r-photoStageIntro--out .p5r-photoStageIntro__img,
+  body[data-p5r-page="photo-stage"] .p5r-photoStage.p5r-photoStage--in{
+    animation: none !important;
+  }
+}
+
+/* —— 照片舞台：3D 环形展台 + 圆台向上打光（无顶红）+ 双面卡片 —— */
+.p5r-photoStage{
+  --p5r-stage-spin: 0deg;
+  position: relative;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 0 32px;
+  min-height: min(72vh, 640px);
+}
+.p5r-photoStage__floor{
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 78%;
+  max-width: 640px;
+  height: 100px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 50%;
+  /* 由内向外：台心柔和提亮，边缘渐暗，光晕克制（与整体更协调） */
+  background:
+    radial-gradient(ellipse 48% 92% at 50% 50%,
+      rgba(240, 248, 255, 0.42) 0%,
+      rgba(255, 0, 34, 0.18) 18%,
+      rgba(60, 70, 90, 0.55) 42%,
+      rgba(16, 18, 26, 0.92) 72%,
+      rgba(4, 4, 8, 0.98) 100%);
+  box-shadow:
+    inset 0 0 28px rgba(255, 255, 255, 0.12),
+    inset 0 0 60px rgba(255, 0, 34, 0.08),
+    0 0 48px rgba(255, 0, 34, 0.22),
+    0 0 90px rgba(255, 60, 80, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+/* 自圆台中心向上的锥形舞台光（类脚光/地排灯） */
+.p5r-photoStage__uplight{
+  position: absolute;
+  left: 50%;
+  bottom: calc(6% + 20px);
+  width: min(160%, 920px);
+  height: min(62vh, 520px);
+  transform: translate(-50%, 22%);
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 38% 52% at 50% 100%,
+      rgba(255, 252, 245, 0.22) 0%,
+      rgba(255, 0, 34, 0.1) 28%,
+      rgba(180, 30, 60, 0.04) 48%,
+      transparent 68%);
+  filter: blur(14px);
+  mix-blend-mode: screen;
+}
+.p5r-photoStage__uplight::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 72%;
+  height: 55%;
+  transform: translateX(-50%);
+  background: conic-gradient(
+    from 200deg at 50% 100%,
+    transparent 0deg,
+    rgba(255, 250, 240, 0.06) 55deg,
+    rgba(255, 0, 34, 0.07) 90deg,
+    rgba(255, 250, 240, 0.06) 125deg,
+    transparent 180deg
+  );
+  filter: blur(20px);
+  opacity: 0.85;
+}
+.p5r-photoStage__viewport{
+  position: relative;
+  z-index: 3;
+  height: min(52vh, 480px);
+  perspective: 1100px;
+  perspective-origin: 50% 40%;
+}
+.p5r-photoStage__rotor{
+  position: absolute;
+  left: 50%;
+  top: calc(42% + 2cm);
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+.p5r-photoStage__card{
+  --tz: min(32vw, 300px);
+  --card-deg: 60deg;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(100px, 22vw, 150px);
+  height: clamp(180px, 38vw, 260px);
+  margin-left: calc(clamp(100px, 22vw, 150px) / -2);
+  margin-top: calc(clamp(180px, 38vw, 260px) / -2);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transform: rotateY(calc(var(--i) * var(--card-deg))) translateZ(var(--tz));
+  -webkit-tap-highlight-color: transparent;
+}
+.p5r-photoStage__card:focus-visible{
+  outline: 2px solid #ff0022;
+  outline-offset: 4px;
+}
+.p5r-photoStage__cardFlip{
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+}
+.p5r-photoStage__cardFace{
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 20px rgba(255, 0, 34, 0.18);
+  transition: box-shadow 0.25s ease;
+}
+.p5r-photoStage__cardFace--back{
+  transform: rotateY(180deg);
+}
+.p5r-photoStage__card:hover .p5r-photoStage__cardFace{
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 0, 34, 0.4),
+    0 0 28px rgba(255, 0, 34, 0.28);
+}
+.p5r-photoStage__cardFace img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  filter: saturate(1.05) contrast(1.02);
+}
+/* 绕竖直 Y 轴转一周（类门板绕门轴转，非绕 Z 轴风车转）；双面同图时正反面一致 */
+@keyframes p5rPhotoStageCardSpin{
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.p5r-photoStage__cardFlip--spin{
+  animation: p5rPhotoStageCardSpin 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+.p5r-photoStage__label{
+  position: absolute;
+  left: 50%;
+  bottom: -28px;
+  transform-style: preserve-3d;
+  /* 抵消转盘 + 本卡位的 rotateY，姓名始终正对视线（不随卡片转到背面而镜像） */
+  transform: translateX(-50%) rotateY(calc(-1 * (var(--i) * var(--card-deg) + var(--p5r-stage-spin))));
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 0 10px rgba(255, 0, 34, 0.35);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce){
+  .p5r-photoStage__rotor{
+    will-change: auto;
+  }
+  .p5r-photoStage__cardFlip--spin{
+    animation: none;
+  }
+}
+
+.p5r-logo{
+  height: calc(var(--p5r-h) - 10px);
+  width: auto;
+  display:block;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
+}
+/* 顶栏头像：四边不超过 1cm；<a> 默认 inline 时 width/height 无效，必须用 inline-block/block */
+.p5r-header .p5r-profileEntryWrap{
+  flex-shrink: 0;
+  min-width: 0;
+}
+.p5r-header .p5r-profileEntry{
+  display: inline-block;
+  vertical-align: middle;
+  width: min(1cm, calc(var(--p5r-h) - 12px));
+  height: min(1cm, calc(var(--p5r-h) - 12px));
+  max-width: 1cm;
+  max-height: 1cm;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0;
+  cursor: pointer;
+  box-sizing: border-box;
+  line-height: 0;
+}
+.p5r-header .p5r-profileEntry__img{
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* 通知模板仅用于 JS 克隆，禁止在页面上露出（避免误显摩尔加纳立绘） */
+#p5NotiTpl.p5-noti-ctn{
+  display: none !important;
+}
+
+/* 人物区页眉：「公告」独立入口；「联系」独立入口（player4 用 .p5r-contactNavSolo，联系页当前页用 .p5r-contactHeaderSolo，版式一致） */
+body.p5r-characters .p5r-bulletinNavSolo.p5-btn-ctn,
+body.p5r-characters .p5r-contactNavSolo.p5-btn-ctn,
+body.p5r-characters .p5r-contactHeaderSolo.p5-btn-ctn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: none;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+/* 头像 + 悬浮退出 + 右侧用户名 */
+.p5r-headerUser{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.p5r-profileEntryWrap{
+  position: relative;
+}
+/* 头像与菜单之间的间隙：鼠标经过仍算在 wrap 内，便于点到「退出」 */
+.p5r-profileEntryWrap::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+.p5r-headerUserMenu{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 0;
+  width: max-content;
+  max-width: min(168px, 92vw);
+  padding: 8px 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(11, 11, 15, 0.96);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 0, 34, 0.08);
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+  z-index: 70;
+  pointer-events: none;
+}
+.p5r-profileEntryWrap:hover .p5r-headerUserMenu,
+.p5r-profileEntryWrap:focus-within .p5r-headerUserMenu{
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+/* 退出：比人物下拉项略窄，不拉满 168px */
+.p5r-headerUserMenu .p5r-headerNav__item.p5-btn-ctn{
+  width: auto;
+  min-width: 0;
+  align-self: center;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+.p5r-headerUserName{
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Banner：3D 视差随鼠标微动 */
+.p5r-banner{
+  position: relative;
+  height: var(--p5r-banner);
+  z-index: 1;
+  /* 人物页 banner 需要铺满整个视口宽度（不受 .p5r-shell max-width 影响） */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: var(--p5r-blockGap); /* banner 与下方组件留空 */
+  overflow: hidden;
+  perspective: 900px;
+  box-shadow:
+    0 10px 32px rgba(255, 0, 34, .14),
+    0 4px 18px rgba(255, 0, 34, .09),
+    0 1px 0 rgba(255, 0, 34, .12);
+}
+.p5r-banner__bg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+  filter: contrast(1.05) saturate(1.05);
+  transform-origin: center center;
+  transition: transform .22s ease-out;
+  will-change: transform;
+}
+.p5r-banner__veil{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.25) 45%, rgba(0,0,0,.70) 100%),
+    radial-gradient(60% 120% at 50% 10%, rgba(255,0,34,.20) 0%, rgba(255,0,34,0) 60%);
+}
+
+/* 侧栏：sticky 贴在视口顶栏下方，与版心同步滚动（不再 viewport fixed，避免缩放/横滚错位） */
+.p5r-side{
+  position: sticky;
+  top: calc(var(--p5r-h) + var(--p5r-blockGap));
+  max-height: calc(100vh - var(--p5r-h) - var(--p5r-blockGap) - 8px);
+  overflow-x: visible;
+  overflow-y: auto;
+  box-sizing: border-box;
+  z-index: 40;
+  pointer-events: none;
+  -webkit-overflow-scrolling: touch;
+}
+.p5r-side > *{
+  pointer-events: auto;
+}
+.p5r-side--left{
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--p5r-gap) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+}
+/* 日历：在左四分之一内水平居中 */
+.p5r-calendarOuter{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-shrink: 0;
+  transform: translateX(-1cm);
+}
+.p5r-side--right{
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--p5r-gap) var(--p5r-page-pad-right) var(--p5r-gap) var(--p5r-columnPad);
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 预告信在右四分之一水平居中 */
+  box-sizing: border-box;
+  overflow-x: hidden; /* 预告信等不撑出栏外、避免横向拖动 */
+}
+
+/* 人物页预告信：固定在视口顶栏下方，与版心右栏同宽同列对齐（overflow-x:hidden 易使 sticky 失效，故用 fixed + 列宽公式） */
+body.p5r-characters[data-p5r-page="characters"] .p5r-side--right{
+  --p5r-shell-w: min(100vw, 1440px);
+  --p5r-gridInner: calc(var(--p5r-shell-w) - 2 * var(--p5r-edgePad));
+  --p5r-colUnit: calc((var(--p5r-gridInner) - 2 * var(--p5r-columnPad)) / 4);
+  position: fixed;
+  top: calc(var(--p5r-h) + var(--p5r-blockGap));
+  right: max(0px, calc((100vw - var(--p5r-shell-w)) / 2 + var(--p5r-edgePad)));
+  width: min(var(--p5r-colUnit), calc(100vw - 2 * var(--p5r-edgePad)));
+  align-self: start;
+  max-height: calc(100vh - var(--p5r-h) - var(--p5r-blockGap) - 12px);
+  overflow-y: auto;
+  z-index: 42;
+}
+
+/* 人物页：日历与预告信都跟随页面滚动（不 sticky / 不 fixed / 不内滚动） */
+body.p5r-characters[data-p5r-page="characters"] .p5r-side{
+  position: static;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+  -webkit-overflow-scrolling: auto;
+}
+body.p5r-characters[data-p5r-page="characters"] .p5r-side--right{
+  position: static;
+  top: auto;
+  right: auto;
+  width: 100%;
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* Main：网格中栏，整列同色（不再用全宽渐变模拟左右黑条） */
+.p5r-main{
+  position: relative;
+  z-index: 2;
+  margin-top: 0;
+  padding: var(--p5r-blockGap) 0 40px;
+  min-height: calc(100vh - var(--p5r-h) - var(--p5r-banner) - 3 * var(--p5r-blockGap));
+  background-color: #2a050c;
+  background-image: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* 人物介绍：中间栏内容容器 */
+.p5r-intro{
+  margin-top: 0;
+  min-height: calc(100vh - var(--p5r-banner) - var(--p5r-blockGap));
+  background: transparent;
+  border-radius: 0;
+  padding: 0 var(--p5r-columnPad);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* 中间栏：人物表（p5-table-ctn / p5-scrollbar 来自 p5-ui.css） */
+.p5r-charTableHeading{
+  margin: 0 0 var(--p5r-blockGap);
+  text-align: left;
+}
+
+/* 「主要角色」「角色拼图」：第 1、3、4 字白字；第 2 字白底黑字；倾角由 characters.js 随机写入 */
+.p5-title-ctn .p5r-staggerTitle__track{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.08em;
+  flex-wrap: wrap;
+  padding: 0;
+}
+.p5-title-ctn .p5r-staggerTitle__track > .p5r-staggerTitle__ch{
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transform-origin: 50% 55%;
+}
+.p5-title-ctn .p5r-staggerTitle__track > .p5r-staggerTitle__ch.p5r-staggerTitle__ch--invert{
+  background-color: #fff;
+  color: #000;
+  padding: 0.1em 0.16em 0.12em;
+  line-height: 1;
+  box-sizing: border-box;
+}
+/* 固定高度：分页切换时区域高度不变（约 5 行数据 + 表头，超出在内部滚动）；高度为原先的 0.8 倍 */
+.p5r-charTableScroll{
+  width: 100%;
+  max-width: 100%;
+  height: calc(420px * 0.8);
+  min-height: calc(420px * 0.8);
+  max-height: calc(420px * 0.8);
+  overflow: auto;
+  box-sizing: border-box;
+  background-color: var(--p5r-black);
+}
+.p5r-charTable{
+  width: 100%;
+  table-layout: fixed;
+  background-color: var(--p5r-black);
+}
+/* 每行上下垫高为原先的 0.8 倍；数据行黑底；表头白底黑字（人物 / 头像 / 介绍三列一致，盖过 p5-table-ctn 默认） */
+.p5r-charTableScroll .p5r-charTable > thead > tr > th,
+.p5r-charTableScroll .p5r-charTable > tbody > tr > td{
+  padding-top: calc((2mm + 6px) * 0.8);
+  padding-bottom: calc((2mm + 6px) * 0.8);
+}
+.p5r-charTableScroll .p5r-charTable > tbody > tr > td{
+  background-color: var(--p5r-black);
+}
+.p5-table-ctn.p5r-charTableScroll .p5r-charTable > thead > tr > th{
+  background-color: #fff !important;
+  color: #0b0b0f !important;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+.p5r-charTableScroll .p5r-charTable > thead > tr{
+  background-color: #fff;
+}
+.p5r-charTableScroll .p5r-charTable > tbody > tr{
+  background-color: var(--p5r-black);
+}
+
+/* 行悬停：三列一致白底黑字（中间「头像」列曾被上面 tbody td 规则压住，与首尾列不同步） */
+.p5-table-ctn.p5r-charTableScroll .p5r-charTable tbody tr.p5-tr-onhover:hover > td{
+  background-color: #fff !important;
+  color: #0b0b0f !important;
+}
+.p5-table-ctn.p5r-charTableScroll
+  .p5r-charTable
+  tbody
+  tr.p5-tr-onhover:hover
+  .p5r-charIntroSummary{
+  color: #0b0b0f !important;
+}
+
+.p5r-charTable th:first-child,
+.p5r-charTable td:first-child{
+  width: 18%;
+  text-align: left;
+}
+.p5r-charTable td:first-child{
+  vertical-align: middle;
+}
+.p5r-charTable th:nth-child(2),
+.p5r-charTable td:nth-child(2){
+  width: calc(88px * 0.8);
+  min-width: calc(56px * 0.8 + 16px);
+  text-align: center;
+}
+.p5r-charTable th:nth-child(3){
+  text-align: center;
+}
+.p5r-charPortraitCell{
+  text-align: center;
+  vertical-align: middle;
+}
+.p5r-charPortrait{
+  display: block;
+  margin: 0 auto;
+  width: calc(56px * 0.8);
+  height: calc(56px * 0.8);
+  object-fit: cover;
+  border-radius: calc(10px * 0.8);
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.35);
+}
+.p5r-charIntroCell{
+  vertical-align: middle;
+  font-size: 13px;
+  line-height: 1.24;
+  color: rgba(255,255,255,.88);
+  text-align: center;
+}
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]{
+  cursor: pointer;
+}
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]:focus-visible{
+  outline: 2px solid rgba(28, 254, 255, .75);
+  outline-offset: -2px;
+}
+.p5r-charIntroSummary{
+  display: block;
+  max-width: 12em;
+  margin: 0 auto;
+  padding: calc(6px * 0.8) calc(4px * 0.8);
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1.2;
+  color: rgba(255,255,255,.9);
+}
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]:focus-visible:not(:hover) .p5r-charIntroSummary{
+  color: rgba(255,255,255,.98);
+}
+/* 悬停 / 选中时头像格与简介列同步高亮 */
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]:hover .p5r-charPortrait,
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]:focus-visible .p5r-charPortrait,
+.p5r-charTable tbody tr.p5r-charRow[data-char-href]:active .p5r-charPortrait,
+.p5r-charTable tbody tr.p5r-charRow[data-char-href].is-selected .p5r-charPortrait{
+  border-color: rgba(28, 254, 255, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(28, 254, 255, 0.22),
+    0 0 16px rgba(28, 254, 255, 0.32);
+  background: rgba(0, 0, 0, 0.5);
+}
+.p5r-charTable tbody tr.p5r-charRow[data-char-href].is-selected > td{
+  background-color: rgba(28, 254, 255, 0.07);
+}
+
+/* 拼图与变身动画共用最大宽度：原 576px（720×0.8）的 0.9 倍 */
+body.p5r-characters[data-p5r-page="characters"]{
+  --p5r-slidePuzzleMaxW: min(100%, calc(576px * 0.9));
+}
+
+/* 4×4 华容道：与上方「主要角色」表区用纯黑顶边分隔 */
+.p5r-slidePuzzle{
+  margin-top: calc(var(--p5r-blockGap) + 28px);
+  padding-top: 14px;
+  border-top: 2px solid #000;
+}
+.p5r-slidePuzzle__title{
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+/* 变身动画：紧接拼图下方，纯黑顶边与拼图区分；标题与「角色拼图」同款 stagger */
+.p5r-transformAnim{
+  margin-top: calc(var(--p5r-blockGap) + 28px);
+  padding-top: 14px;
+  border-top: 2px solid #000;
+}
+.p5r-transformAnim__title{
+  margin: 0 0 14px;
+  text-align: left;
+}
+.p5r-transformAnim__videoWrap{
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.p5r-transformAnim__video{
+  display: block;
+  width: 100%;
+  max-width: var(--p5r-slidePuzzleMaxW, min(100%, calc(576px * 0.9)));
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-sizing: border-box;
+  background: #0b0b0f;
+}
+
+/* —— 人物介绍（图文切换） —— */
+.p5r-bio{
+  margin-top: calc(var(--p5r-blockGap) + 28px);
+  padding-top: 14px;
+  border-top: 2px solid #000;
+}
+.p5r-bio__title{
+  margin: 0 0 14px;
+  text-align: left;
+}
+/* 人物介绍生成区：左右各收 1cm；内层加宽后裁切，眼神/过场仍按原 cover 比例铺满（仅裁掉左右） */
+.p5r-bioCardOuter{
+  position: relative;
+  margin-left: 1cm;
+  margin-right: 1cm;
+  box-sizing: border-box;
+}
+.p5r-bioCardClip{
+  overflow: hidden;
+  border-radius: 16px;
+  box-sizing: border-box;
+  border: 2px solid #000;
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+}
+.p5r-bioCardClip .p5r-bioCard{
+  width: calc(100% + 2cm);
+  margin-left: -1cm;
+  margin-right: -1cm;
+  max-width: none;
+  box-shadow: none;
+}
+/* 背景/眼神/过场仍用加宽后的卡片面铺 + 裁切；正文栈对齐「裁切后可视区」宽度，避免按加宽宽度排版再被裁掉 */
+.p5r-bioCardClip .p5r-bioCard__stack{
+  box-sizing: border-box;
+  width: calc(100% - 2cm + 28px);
+  max-width: calc(100% - 2cm + 28px);
+  margin-left: max(0px, 1cm - 14px);
+  margin-right: max(0px, 1cm - 14px);
+}
+/* 右侧便签抽屉（头像选择） */
+.p5r-bio{
+  position: relative;
+}
+.p5r-bioPicker{
+  position: absolute;
+  /* 便签左边缘与裁剪后人物介绍卡右边线重合 */
+  left: calc(100% - 1px);
+  right: auto;
+  top: 4px;
+  z-index: 5;
+}
+.p5r-bioPicker__tab{
+  border: 1px solid rgba(255,255,255,.18);
+  background: #ffffff;
+  color: #0b0b0f;
+  padding: 10px 12px;
+  /* 左边直角、右边圆角 */
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+  font-weight: 900;
+  letter-spacing: .08em;
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.45),
+    inset -2px -2px 0 rgba(0,0,0,.28);
+  transform: translateX(0);
+  /* 文案保持横排，不换行 */
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
+}
+.p5r-bioPicker__drawer{
+  position: absolute;
+  left: 0;
+  margin-top: 10px;
+  width: max-content;
+  max-width: min(92vw, 320px);
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.25);
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
+  padding: 8px;
+  transform: translateX(14px);
+  opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+  overflow: visible;
+}
+.p5r-bioPicker.is-open .p5r-bioPicker__drawer{
+  transform: translateX(0);
+  opacity: 1;
+}
+.p5r-bioPicker__grid{
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 8px;
+  justify-items: start;
+  align-items: start;
+  width: max-content;
+  overflow: visible;
+}
+.p5r-bioPickItem{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.18);
+  background: transparent;
+  cursor: grab;
+  user-select: none;
+  line-height: 0;
+  box-sizing: border-box;
+  transform: scale(1);
+  transform-origin: 50% 50%;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+  will-change: transform;
+}
+.p5r-bioPickItem:active{ cursor: grabbing; }
+.p5r-bioPickItem:hover{
+  transform: scale(1.07);
+  border-color: rgba(255, 0, 34, .38);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, .28),
+    0 6px 16px rgba(255, 0, 34, .14);
+}
+.p5r-bioPickItem:focus-visible{
+  outline: 2px solid rgba(28, 254, 255, .55);
+  outline-offset: 2px;
+}
+.p5r-bioPickItem__img{
+  display: block;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 0;
+  background: rgba(0,0,0,.04);
+}
+.p5r-bioCard{
+  --p5r-bio-card-h: min(380px, 58vh);
+  /* 眼神素材（背景层/过场层）共用同一定位，保证切换对齐 */
+  --p5r-bio-eyes-pos-y: 50%;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.58));
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+  padding: 14px 14px 16px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  /* 拖入前/后外框严格同高：内容在 .p5r-bioCard__stack 内滚动 */
+  display: flex;
+  flex-direction: column;
+  height: var(--p5r-bio-card-h);
+  min-height: var(--p5r-bio-card-h);
+  max-height: var(--p5r-bio-card-h);
+}
+.p5r-bioCard__stack{
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.p5r-bioCard--empty .p5r-bioCard__stack{
+  justify-content: center;
+}
+
+/* 生成过场：先遮住整张卡（黑底 + 清晰素材图），再缓慢淡出；内层图稍晚渐入，更自然 */
+.p5r-bioCard__reveal{
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+  /* 过场层自带默认构图，不继承卡片上尚未清除的奥村春偏移（春→其他时过渡会偏上） */
+  --p5r-bio-eyes-pos-y: 50%;
+}
+.p5r-bioCard__reveal.is-on{
+  opacity: 1;
+}
+.p5r-bioCard__revealImg{
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center var(--p5r-bio-eyes-pos-y);
+  opacity: 0;
+  /* 不做单独缩放，避免与背景层对不齐 */
+  transform: none;
+  transition:
+    opacity 1.55s cubic-bezier(0.16, 1, 0.3, 1) 0.28s,
+    transform 0s linear 0s;
+  will-change: opacity;
+}
+.p5r-bioCard__reveal.is-on .p5r-bioCard__revealImg{
+  opacity: 0.97;
+  transform: none;
+}
+/* 淡出时由整层（.p5r-bioCard__reveal）做 opacity 过渡即可；
+   不要让图片先瞬间变 0，否则看起来像“眼神不淡去、直接消失”。 */
+.p5r-bioCard__media{
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  /* 上半区：浅高光 + 深色底，避免 backdrop-filter 把头像格衬成发白一片 */
+  padding: 10px 10px 12px;
+  margin: 0;
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.1),
+      rgba(255,255,255,.05)
+    ),
+    rgba(11, 11, 15, .52);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 10px 22px rgba(0,0,0,.22);
+  backdrop-filter: blur(10px) saturate(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+}
+.p5r-bioCard__avatar{
+  width: 88px;
+  height: 88px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid rgba(255,255,255,.14);
+  /* 与页面主色一致，避免头像格出现发白块 */
+  background-color: #0b0b0f;
+}
+.p5r-bioCard__nameRow{
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* 与「人物介绍」等区块标题同款 stagger（逐字 + 第 2 字反色） */
+.p5r-bioCard__name.p5-title-ctn{
+  margin: 0;
+  text-align: left;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: clamp(17px, 1.35vw + 12px, 22px);
+}
+.p5r-bioCard__quote{
+  margin: 6px 0 6px;
+  color: rgba(255,255,255,.88);
+  line-height: 1.7;
+}
+.p5r-bioCard__eyesWrap{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.35);
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+.p5r-bioCard__eyesWrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(255,255,255,.08);
+  pointer-events:none;
+}
+.p5r-bioCard__eyes{
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  object-position: center var(--p5r-bio-eyes-pos-y);
+  display: block;
+  opacity: 0;
+  transform: none;
+  filter: blur(0) saturate(1) brightness(1);
+  transition:
+    opacity 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.p5r-bioCard__eyes.is-on{
+  opacity: 1;
+  transform: none;
+}
+/* 磨砂时只加模糊/饱和度，不再 scale */
+.p5r-bioCard.is-frosted .p5r-bioCard__eyes{
+  filter: blur(10px) saturate(1.08) brightness(0.9);
+  transform: none;
+}
+/* 最终常驻：磨砂更重一点、背景更糊一点（用于生成完成后的呈现） */
+.p5r-bioCard.is-frostedFinal .p5r-bioCard__eyes{
+  filter: blur(16px) saturate(1.12) brightness(0.84);
+}
+
+/* 奥村春：眼神素材构图偏下，整体上移约 1cm（过场层 + 背景层一致） */
+.p5r-bioCard--eyesHaru{
+  --p5r-bio-eyes-pos-y: calc(50% - 1cm);
+}
+.p5r-bioCard__reveal--eyesHaru{
+  --p5r-bio-eyes-pos-y: calc(50% - 1cm);
+}
+
+/* 默认未生成：仅占位提示，正文与头像区隐藏 */
+.p5r-bioCard__placeholder{
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 6px 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, .52);
+  flex: 0 0 auto;
+}
+.p5r-bioCard:not(.p5r-bioCard--empty) .p5r-bioCard__placeholder{
+  display: none;
+}
+.p5r-bioCard.is-dropOver{
+  outline: 2px solid rgba(255, 0, 34, .55);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(255, 0, 34, .10), 0 18px 45px rgba(0,0,0,.45);
+}
+.p5r-bioCard.is-dropOver .p5r-bioCard__placeholder{
+  color: rgba(255, 220, 230, .78);
+}
+.p5r-bioCard--empty .p5r-bioCard__eyesWrap{
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.p5r-bioCard--empty .p5r-bioCard__media,
+.p5r-bioCard--empty .p5r-bioCard__body{
+  display: none;
+}
+
+/* 内容浮在眼神素材之上（z-index 由 .p5r-bioCard__stack 统一承载） */
+.p5r-bioCard__media,
+.p5r-bioCard__body{
+  position: relative;
+}
+.p5r-bioCard__body{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255,255,255,.14);
+  /* 下半部分稍暗：形成上亮下暗的层次 */
+  background: rgba(0,0,0,.10);
+  border-radius: 14px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+.p5r-bioCard__summary{
+  margin: 0;
+  color: rgba(255,255,255,.84);
+  /* 行距加大；段与段不再额外加 margin，与行与行同一套行高节奏 */
+  line-height: 2.35;
+  text-align: center;
+  max-width: 68ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+.p5r-bioCard__summary p{
+  margin: 0;
+}
+.p5r-bioCard__summaryStrong{
+  font-weight: 800;
+  color: rgba(255, 255, 255, .96);
+  letter-spacing: 0.02em;
+}
+
+.p5r-bioDrop{
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+/* 未生成介绍：不占交互、不可见，但仍占位（不用 display:none） */
+.p5r-bioDrop--inactive .p5r-bioDrop__btn{
+  visibility: hidden;
+  pointer-events: none;
+}
+.p5r-bioDrop__btn{
+  white-space: nowrap;
+}
+.p5r-bioDrop__btn:disabled{
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.35);
+}
+
+/* 人物介绍：生成过场（全屏素材图） */
+.p5r-bioGenOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #000;
+  opacity: 0;
+  transition: opacity .26s ease;
+  pointer-events: none;
+}
+.p5r-bioGenOverlay.is-on{
+  opacity: 1;
+}
+.p5r-bioGenOverlay__img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.05) contrast(1.05);
+}
+
+.p5r-slidePuzzle__mount{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+}
+.p5r-slidePuzzle__actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+  justify-content: center;
+  align-items: center;
+}
+.p5r-slidePuzzle__board{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 0;
+  width: var(--p5r-slidePuzzleMaxW, min(100%, calc(576px * 0.9)));
+  /* 宽高比由 JS 按原图比例写入 style.aspectRatio */
+  max-width: 100%;
+  background: rgba(0,0,0,.55);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  box-sizing: border-box;
+}
+.p5r-slidePuzzle__board--done{
+  padding: 0;
+  gap: 0;
+  border: 1px solid rgba(255, 0, 34, .25);
+  box-shadow: 0 0 24px rgba(255, 0, 34, .12);
+  display: block;
+  width: var(--p5r-slidePuzzleMaxW, min(100%, calc(576px * 0.9)));
+  max-width: 100%;
+  height: auto;
+}
+.p5r-slidePuzzle__tile{
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+  cursor: grab;
+  background-repeat: no-repeat;
+  background-color: rgba(20,8,12,.9);
+  transition: border-color .12s ease, box-shadow .12s ease, opacity .12s ease;
+  box-sizing: border-box;
+  touch-action: none;
+  -webkit-user-drag: element;
+  transform-origin: 50% 50%;
+}
+@keyframes p5r-slidePuzzleTileWiggle{
+  0%, 100%{ transform: translate(0, 0) rotate(0deg); }
+  25%{ transform: translate(0.55px, -0.45px) rotate(-0.42deg); }
+  50%{ transform: translate(-0.5px, 0.5px) rotate(0.38deg); }
+  75%{ transform: translate(0.4px, 0.35px) rotate(-0.25deg); }
+}
+.p5r-slidePuzzle__tile:active{
+  cursor: grabbing;
+}
+.p5r-slidePuzzle__tile[draggable="true"]:focus-visible{
+  outline: 2px solid rgba(28,254,255,.7);
+  outline-offset: 1px;
+}
+.p5r-slidePuzzle__tile.is-dragging{
+  opacity: .55;
+}
+.p5r-slidePuzzle__tile:not(.is-empty):not(.is-dragging):hover{
+  border-color: rgba(255, 0, 34, .45);
+  box-shadow: inset 0 0 0 1px rgba(255, 0, 34, .2);
+  animation: p5r-slidePuzzleTileWiggle 0.52s ease-in-out infinite;
+}
+.p5r-slidePuzzle__tile.is-empty{
+  cursor: default;
+  background: rgba(0,0,0,.45);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.p5r-slidePuzzle__tile.is-empty.is-drop-target{
+  box-shadow: inset 0 0 0 2px rgba(28,254,255,.55);
+  background: rgba(28,254,255,.08);
+}
+.p5r-slidePuzzle__tile:not(.is-empty).is-drop-target{
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 0, 34, .55),
+    inset 0 0 0 1px rgba(28, 254, 255, .25);
+  outline: 1px solid rgba(28, 254, 255, .35);
+  outline-offset: -1px;
+}
+.p5r-slidePuzzle__fullimg{
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 9px;
+  vertical-align: top;
+}
+@media (prefers-reduced-motion: reduce){
+  .p5r-slidePuzzle__tile:not(.is-empty):hover{
+    animation: none;
+  }
+}
+.p5r-charPager{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: var(--p5r-blockGap);
+}
+.p5r-charPagerBtn{
+  min-width: 40px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(0,0,0,.35);
+  color: rgba(255,255,255,.9);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.p5r-charPagerBtn:hover{
+  border-color: rgba(255, 0, 34, .55);
+  color: #fff;
+}
+.p5r-charPagerBtn.is-active{
+  border-color: #ff0022;
+  background: rgba(255, 0, 34, .18);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(255, 0, 34, .2);
+}
+
+/* Calendar card (3:4)：宽度为原先 82.5% 的 0.8 倍；Chrome/Safari 用 zoom；Firefox 用 transform */
+.p5r-calendarCard{
+  position: relative;
+  width: 66%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  margin-top: var(--p5r-gap);
+  background-color: rgba(0,0,0,.35);
+  perspective: 900px;
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.45),
+    0 8px 28px rgba(255, 0, 34, .12),
+    0 0 22px rgba(255, 0, 34, .08);
+  overflow: visible;
+  display:flex;
+  flex-direction: column;
+  zoom: 0.8;
+  /* 悬停只加强外阴影，不改变 zoom/transform，避免内部数字与文字被缩放 */
+  transition: box-shadow .18s ease;
+}
+.p5r-calendarCard:hover{
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.55),
+    0 10px 34px rgba(255, 0, 34, .16),
+    0 0 28px rgba(255, 0, 34, .10);
+}
+@supports not (zoom: 0.8){
+  .p5r-calendarCard{
+    zoom: normal;
+    transform: scale(0.8);
+    transform-origin: top center;
+    margin-bottom: -24%;
+    transition: box-shadow .18s ease;
+  }
+  .p5r-calendarCard:hover{
+    zoom: normal;
+    transform: scale(0.8);
+  }
+}
+/* 铺满整卡的轮播底图（上、下为同一张、同一 object-fit） */
+.p5r-calBgLayer{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 17px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.p5r-calBgLayer__img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  filter: contrast(1.05) saturate(1.05);
+  transform-origin: center center;
+  transition:
+    opacity .55s ease,
+    transform .22s ease-out;
+  will-change: transform;
+}
+/* 底图视差 + 卡内略放大由 characters.js 与 banner 同款逻辑写入 transform */
+@media (prefers-reduced-motion: reduce){
+  .p5r-calBgLayer__img{
+    transition: opacity .01ms;
+    transform: none !important;
+  }
+}
+.p5r-calHero{
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  height: 25%;
+  pointer-events: none;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,.18) 0%,
+    rgba(0,0,0,.06) 55%,
+    transparent 100%
+  );
+}
+.p5r-calHero__dots{
+  position:absolute;
+  right: 10px;
+  bottom: 10px;
+  display:flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+.p5r-calHero__dots button{
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.10);
+  cursor:pointer;
+}
+.p5r-calHero__dots button.is-active{
+  background: rgba(255,255,255,.85);
+  border-color: rgba(255,255,255,.9);
+}
+
+.p5r-calBody{
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  min-width: 0; /* 避免内部 7 列网格把卡片撑出侧栏 */
+  display:flex;
+  flex-direction: column;
+  padding: 10px 10px 12px;
+  box-sizing: border-box;
+  background: rgba(120, 0, 18, .40); /* 深红色半透明（下半部分） */
+  backdrop-filter: blur(2px);
+  overflow: visible;
+}
+.p5r-calHead{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 2px 8px;
+}
+.p5r-calTitleWrap{
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p5r-calTitleDisplay{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 4px;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 10px 22px rgba(0,0,0,.55);
+}
+.p5r-calPick{
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.p5r-calPickSep{
+  font-weight: 800;
+  color: rgba(255,255,255,.88);
+  user-select: none;
+}
+/* 日历右侧跳出的小红色便签（年份 / 月份单独出现），用 hidden 控制显隐 */
+.p5r-calJumpInline[hidden]{
+  display: none !important;
+}
+.p5r-calJumpInline{
+  position: absolute;
+  right: -8px;               /* 从日历右边“探出”一点 */
+  z-index: 5;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  /* 白底黑字 + 右/下灰边（同「选择人物」便签质感） */
+  border: 1px solid rgba(0,0,0,.22);
+  background: #ffffff;
+  color: #0b0b0f;
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.45),
+    inset -2px -2px 0 rgba(0,0,0,.28);
+}
+/* 上下各一个小便签：年份在上方，月份在下方，大致围绕卡片中线 */
+#calJumpYearBar{
+  top: 40%;
+  transform: translateX(100%);
+}
+#calJumpMonthBar{
+  top: 60%;
+  transform: translateX(100%);
+}
+.p5r-calJumpInput{
+  width: 4.2em;
+  max-width: 38%;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, .28);
+  background: #ffffff;
+  color: #0b0b0f;
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+}
+.p5r-calJumpInput--m{
+  width: 2.4em;
+  max-width: 22%;
+}
+.p5r-calJumpInput:focus{
+  outline: none;
+  border-color: rgba(0, 0, 0, .34);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .12);
+}
+.p5r-calJumpSep{
+  font-size: 11px;
+  color: rgba(0, 0, 0, .55);
+  font-weight: 700;
+}
+.p5r-calJumpOk{
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, .24);
+  background: rgba(0, 0, 0, .06);
+  color: rgba(0, 0, 0, .88);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.p5r-calNav{
+  width: 32px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.35);
+  color: rgba(255,255,255,.95);
+  cursor:pointer;
+}
+.p5r-calWeek{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 2px 8px;
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+  color: rgba(255,255,255,.72);
+}
+.p5r-calGrid{
+  flex: 1;
+  display:grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
+}
+.p5r-day{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.30);
+  color: rgba(255,255,255,.90);
+  cursor: pointer;
+  user-select:none;
+  overflow: visible; /* 匕首不被日期格裁切 */
+  z-index: 0;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0;
+}
+.p5r-day.is-pinned{
+  z-index: 2; /* 匕首可盖住相邻格，不被挡住 */
+}
+.p5r-day.is-muted{
+  opacity: .45;
+}
+.p5r-dayNum{
+  position: relative;
+  z-index: 4; /* 高于匕首，居中时仍可辨认 */
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  text-shadow: 0 0 3px rgba(0, 0, 0, .85), 0 1px 2px rgba(0, 0, 0, .75);
+}
+/* 剑根/图片底部中心落在日期格中心，而非图片中心压在格子上 */
+.p5r-swordPin{
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  /* 窄格（尤其最右列）内按比例缩小，避免匕首横向撑破日历；基准为原 64px 的 1.5 倍 */
+  width: min(96px, 138%);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  transform: translateX(-50%) rotate(-18deg);
+  transform-origin: 50% 100%;
+  pointer-events:none;
+  z-index: 3;
+  filter: drop-shadow(0 18px 27px rgba(0,0,0,.55));
+}
+.p5r-swordPin.is-fly{
+  animation: p5r-sword-fly .38s cubic-bezier(.18,.86,.25,1.0) both;
+}
+@keyframes p5r-sword-fly{
+  from{
+    transform: translate(-50%, -48px) rotate(-58deg) scale(.88);
+    opacity: 0;
+  }
+  to{
+    transform: translateX(-50%) rotate(-18deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 浮动小猫：固定视口；左栏位置随版心实际宽度 min(100vw,1440px) 对齐 */
+.p5r-floatAd{
+  --p5r-shell-w: min(100vw, 1440px);
+  --p5r-floatCat-gridInner: calc(var(--p5r-shell-w) - 2 * var(--p5r-edgePad));
+  --p5r-floatCat-colW: calc((var(--p5r-floatCat-gridInner) - 2 * var(--p5r-columnPad)) / 4);
+  position: fixed;
+  z-index: 45;
+  left: calc((100vw - var(--p5r-shell-w)) / 2 + var(--p5r-edgePad) + (var(--p5r-floatCat-colW) * 0.5));
+  right: auto;
+  top: auto;
+  bottom: max(8px, calc(max(16px, 11vh) - 1cm));
+  transform: translateX(calc(-50% - 2cm));
+  margin: 0;
+  width: max-content;
+  max-width: min(220px, calc(100vw - 24px));
+  height: auto;
+  padding: 0;
+  margin-left: 0;
+  margin-right: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  cursor: pointer;
+  display: block;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.p5r-floatAd__bob{
+  display: block;
+  line-height: 0;
+  animation: p5r-float 2.6s ease-in-out infinite;
+}
+/* 点击后不要浏览器默认焦点框；只放大图 */
+.p5r-floatAd:focus,
+.p5r-floatAd:focus-visible{
+  outline: none;
+}
+.p5r-floatAd img{
+  display: block;
+  max-height: 180px;
+  max-width: min(220px, 100%);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  vertical-align: bottom;
+  transition: transform .22s ease;
+  transform-origin: center center;
+}
+.p5r-floatAd:hover img,
+.p5r-floatAd:focus img{
+  transform: scale(1.18);
+}
+/* 悬停时在原有上下浮动基础上加入轻微抖动（左右小幅偏移 + 轻微旋转） */
+.p5r-floatAd:hover .p5r-floatAd__bob,
+.p5r-floatAd:focus .p5r-floatAd__bob{
+  animation: p5r-float 2.6s ease-in-out infinite, p5r-cat-shake .28s infinite;
+}
+@keyframes p5r-float{
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-22px); }
+}
+@keyframes p5r-cat-shake{
+  0%{ transform: translateX(0) rotate(0deg); }
+  25%{ transform: translateX(-2px) rotate(-1.5deg); }
+  50%{ transform: translateX(1px) rotate(1.5deg); }
+  75%{ transform: translateX(-1px) rotate(-1deg); }
+  100%{ transform: translateX(0) rotate(0deg); }
+}
+
+/* Letter：在右栏内宽度为原先的 1.2 倍（原 80% → 96%），三块之间统一间距；不再右移避免撑出横向滚动 */
+.p5r-letterCard{
+  width: 96%;
+  max-width: 100%;
+  align-self: center;
+  margin-top: var(--p5r-gap);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(120% 80% at 70% 10%, rgba(255,0,34,.18) 0%, rgba(255,0,34,0) 60%),
+    linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.80));
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+  overflow: visible;
+  display:flex;
+  flex-direction: column;
+  gap: var(--p5r-blockGap);
+  padding: 16px;
+}
+.p5r-letterPreview{
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  overflow: hidden;
+  height: 170px;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  transform-origin: 50% 50%;
+}
+.p5r-letterPreview:hover{
+  transform: scale(1.04);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 18px 45px rgba(0,0,0,.55);
+}
+.p5r-letterPreview.has-bg{
+  background-size: cover;
+  background-position: center;
+}
+.p5r-letterRings{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity: .95;
+  pointer-events:none;
+}
+.p5r-letterRings svg{
+  width: 92%;
+  height: 92%;
+  filter: drop-shadow(0 16px 20px rgba(0,0,0,.45));
+}
+.p5r-letterTiles{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  pointer-events:none;
+}
+.p5r-letterRow{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.p5r-tile{
+  position:relative;
+  flex:0 0 auto;
+  width: 34px;
+  height: 34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.95);
+  font-weight: 900;
+  letter-spacing: .02em;
+  box-shadow: 0 12px 22px rgba(0,0,0,.45);
+  user-select:none;
+}
+.p5r-tile.v1{ background: var(--p5r-red); color: var(--p5r-white); }
+.p5r-tile.v2{ background: var(--p5r-black); color: var(--p5r-white); }
+.p5r-tile.v3{ background: var(--p5r-white); color: #111; border-color: rgba(0,0,0,.75); }
+
+.p5r-letterControls{
+  display:flex;
+  flex-direction: column;
+  gap: var(--p5r-blockGap);
+  width: 100%;
+}
+.p5r-inputWrap{
+  position: relative;
+  align-self: center;
+  width: 80%;
+  max-width: 80%;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background:
+    url("../../../皇家p5r/佐仓双叶/排版人物框.png") center/cover no-repeat,
+    rgba(120, 0, 18, .45); /* 输入区整体深红 */
+  background-origin: border-box;
+  padding: 12px;
+  overflow: hidden; /* 背景与内框对齐；聚焦光圈改由外层 focus-within 绘制 */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: transform .18s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.p5r-inputWrap:focus-within{
+  border-color: rgba(255, 0, 34, .45);
+  /* 内描边不被 overflow:hidden 裁切，四周（含右侧）完整 */
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 0, 34, .6),
+    inset 0 0 22px rgba(255, 0, 34, .12);
+}
+.p5r-inputWrap:hover{
+  transform: scale(1.03);
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.55);
+}
+.p5r-inputSpark{
+  position:absolute;
+  top: -14px;
+  left: -12px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  transform: rotate(-10deg);
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.45));
+  pointer-events:none;
+}
+.p5r-letterInput{
+  width: 100%;
+  max-width: 100%;
+  resize: none;
+  display: block;
+  margin: 0;
+  box-sizing: border-box;
+  background: rgba(120, 0, 18, .55); /* 输入框深红 */
+  color: rgba(255,255,255,.95);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 12px;
+  padding: 10px 10px;
+  outline: none;
+  transition: border-color .2s ease;
+}
+.p5r-letterInput:focus,
+.p5r-letterInput:focus-visible{
+  border-color: #ff0022;
+  /* 外圈红光画在 .p5r-inputWrap:focus-within，避免与 overflow 冲突且四周对称 */
+  box-shadow: none;
+}
+.p5r-letterInput::placeholder{
+  color: rgba(255,255,255,.72);
+}
+.p5r-upload{
+  align-self: center;
+  width: 80%;
+  max-width: 80%;
+  box-sizing: border-box;
+}
+/* 上传预览在框内几何居中（覆盖 p5-ui 固定 margin，避免视觉偏一侧） */
+.p5r-upload.p5-upload-ctn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  /* 右侧星星/放大镜有负偏移，需允许溢出显示 */
+  overflow: visible;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  transform-origin: 50% 50%;
+}
+.p5r-upload.p5-upload-ctn:hover{
+  transform: scale(1.04);
+  box-shadow: 0 18px 45px rgba(0,0,0,.55);
+}
+.p5r-upload.p5-upload-ctn .p5-upload-preview{
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: calc(100% - 16px);
+  max-height: calc(100% - 16px);
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+}
+
+/* 人物页固定版心：以下断点不作用于 body.p5r-characters，避免侧栏被隐藏或 vw 侧宽变化 */
+@media (max-width: 1100px){
+  :root:not(:has(body.p5r-characters)){
+    --p5r-sideW: min(28vw, 320px);
+  }
+}
+@media (max-width: 940px){
+  :root:not(:has(body.p5r-characters)){
+    --p5r-sideW: 260px;
+  }
+  body:not(.p5r-characters) .p5r-main{
+    padding-left: calc(var(--p5r-sideW) + var(--p5r-edgePad) + var(--p5r-columnPad));
+    padding-right: calc(var(--p5r-sideW-right) + var(--p5r-page-pad-right) + var(--p5r-columnPad));
+  }
+}
+@media (max-width: 760px){
+  body:not(.p5r-characters) .p5r-side{ display:none; }
+  body:not(.p5r-characters) .p5r-main{ padding-left: 14px; padding-right: 14px; }
+}
+
+/* 深红页尾：仅人物介绍页；随文档流排在页面最末，需滑到底才见，纯色底 */
+body.p5r-characters[data-p5r-page="characters"] .p5r-pageFooter{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 32px;
+  padding: 18px 20px 22px;
+  background: #4a0a12;
+  text-align: center;
+}
+body.p5r-characters[data-p5r-page="characters"] .p5r-pageFooter__inner{
+  margin: 0 auto;
+  max-width: 640px;
+}
+body.p5r-characters[data-p5r-page="characters"] .p5r-pageFooter__line{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  color: rgba(255, 245, 245, 0.9);
+}
+body.p5r-characters[data-p5r-page="characters"] .p5r-pageFooter a{
+  color: #ffc8d0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+}
+body.p5r-characters[data-p5r-page="characters"] .p5r-pageFooter a:hover{
+  color: #fff;
+}

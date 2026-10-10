@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>P5R 风格示例站（纯 HTML/CSS/原生 JS）</title>
+
+    <!-- 只引入样式：p5-ui 外观皮肤（非 Vue 运行时） -->
+    <link rel="stylesheet" href="../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="./site.css" />
+
+    <!-- 注：图标 symbol 注入（非 Vue） -->
+    <script src="../p5-ui-main/src/assets/svgs/p5-icon-btn.js"></script>
+    <script src="../p5-ui-main/src/assets/svgs/p5-icon-party.js"></script>
+  </head>
+
+  <body class="site">
+    <header class="site-header">
+      <div class="site-header__left">
+        <img
+          class="site-logo"
+          src="../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+        <div class="site-brand">
+          <div class="site-brand__title p5-title-ctn"><span>HEIST SITE</span></div>
+          <div class="site-brand__sub show-plain">P5R 视觉统一示例</div>
+        </div>
+      </div>
+
+      <nav class="site-header__nav">
+        <button class="p5-btn-ctn p5-hover-animation-mix site-navBtn" data-route="home" type="button">
+          主页
+        </button>
+        <button class="p5-btn-ctn p5-hover-animation-gray site-navBtn" data-route="login" type="button">
+          登录
+        </button>
+        <button class="p5-btn-ctn p5-hover-animation-gray site-navBtn" data-route="contact" type="button">
+          联系我们
+        </button>
+      </nav>
+    </header>
+
+    <div class="site-layout">
+      <!-- 左侧导航栏 -->
+      <aside class="site-aside show-plain">
+        <nav class="site-card site-navCard">
+          <h3 class="p5-title-ctn"><span>组件导航</span></h3>
+          <ul class="site-navList">
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-banner">Banner 轮播</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-validate">表单校验</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-userstate">用户状态</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-canvas">Canvas 绘图</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-dnd">拖放</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-pagination">分页导航</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="feature-crowd">CROWD 动画</a></li>
+          </ul>
+        </nav>
+        <nav class="site-card site-navCard">
+          <h3 class="p5-title-ctn"><span>p5-ui 组件</span></h3>
+          <ul class="site-navList">
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-btn">Button / Title / Divider</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-slider">Slider 滑动条</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-switch">Switch 开关</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-table">Table 表格</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-upload">Upload 上传</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-notify">Notification / Message</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-icon">SVG 图标</a></li>
+            <li><a class="site-navLink" href="#" data-scroll-to="p5ui-text">Text 文字</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="site-main">
+        <!-- 主页 -->
+        <section id="page-home" class="site-page">
+          <!-- 页眉区下方 banner 广告区（图像切换 + 1/2/3/4 指示器） -->
+          <section class="site-hero">
+            <div class="site-banner">
+              <img id="bannerImg" class="site-banner__img" src="../shared/p5ui/assets/examples/images/bg.png" alt="" />
+              <div class="site-banner__vignette" aria-hidden="true"></div>
+              <div class="site-banner__indicators" id="bannerIndicators" aria-label="banner indicators"></div>
+            </div>
+
+            <div class="site-hero__text">
+              <h1 class="p5-title-ctn"><span>PAGE HOME</span></h1>
+              <div class="site-hero__sub show-plain">
+                图片切换示例（右下角 1~4 指示器），以及其复用写法说明。
+              </div>
+            </div>
+          </section>
+
+          <!-- 1.2 主页完整性：结构样式模板（不写具体内容） -->
+          <section class="site-section" id="feature-home-structure">
+            <h2 class="p5-title-ctn"><span>主页结构（页面布局模板）</span></h2>
+            <div class="site-section__help show-plain">
+              本示例的主页已包含完整结构，并且重点是“样式统一”，不填具体业务内容：
+              <br />- 页眉区：<code>.site-header</code>（logo + 导航）
+              <br />- banner 区：<code>.site-hero</code> / <code>.site-banner</code>
+              <br />- 正文区：<code>.site-main</code> 内各 <code>.site-section</code>
+              <br />- 副栏区：<code>.site-aside</code>（右/左侧栏都可）
+              <br />- 页脚区：<code>.site-footer</code>
+            </div>
+          </section>
+
+          <!-- 1.3 图片切换：banner 轮播 -->
+          <section class="site-section" id="feature-banner">
+            <h2 class="p5-title-ctn"><span>Banner 图片轮播</span></h2>
+            <div class="site-section__help show-plain">
+              页面顶部的大图就是 banner，右下角有 1~4 数字指示器，点击可以切换图片，每隔 4 秒也会自动轮播。<br /><br />
+              <strong>如何换成你自己的图片：</strong><br />
+              1) 把图片放进 <code>shared/p5ui/assets/examples/images/</code>（或你页面同目录下）。<br />
+              2) 打开 <code>site.js</code>，找到 <code>bannerImages</code> 数组（第 60 行左右），改成你的图片路径，有几张写几项：<br />
+              <code class="site-code">var bannerImages = [
+  "../shared/p5ui/assets/examples/images/你的图1.png",
+  "../shared/p5ui/assets/examples/images/你的图2.png"
+];</code>
+              3) HTML 里的 banner 结构不用改，JS 会自动生成对应数量的指示器。<br /><br />
+              <strong>HTML 结构（头部 .site-hero 区域，不动就能用）：</strong><br />
+              <code class="site-code">&lt;section class="site-hero"&gt;
+  &lt;div class="site-banner"&gt;
+    &lt;img id="bannerImg" class="site-banner__img" src="默认图片路径" alt="" /&gt;
+    &lt;div class="site-banner__vignette" aria-hidden="true"&gt;&lt;/div&gt;
+    &lt;div class="site-banner__indicators" id="bannerIndicators"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code>
+            </div>
+          </section>
+
+          <!-- 3.1 数据验证：入口说明（具体验证在 登录/联系我们 页面） -->
+          <section class="site-section" id="feature-validate">
+            <h2 class="p5-title-ctn"><span>表单校验（数据验证）</span></h2>
+            <div class="site-section__help show-plain">
+              表单校验就是”提交前检查填写内容是否合规”，不合规就弹出红色提示框，不跳转页面。<br /><br />
+              本 demo 把校验逻辑写成了可复用函数（在 <code>site.js</code> 里，搜索 <code>validateForm</code>），校验规则支持：
+              <br />· 必填（<code>required: true</code>）
+              <br />· 邮箱格式（<code>type: 'email'</code>）
+              <br />· 最小长度（<code>minLen: 6</code>）
+              <br /><br />
+              <strong>你们复用时的步骤：</strong><br />
+              1) 把 <code>site.js</code> 里的 <code>validateForm</code> 函数复制到你自己的 JS 文件里。<br />
+              2) 在你的 HTML 里加一个 <code>&lt;div id="formAlert" class="site-alert" hidden&gt;&lt;/div&gt;</code> 作为提示框容器。<br />
+              3) 在表单 <code>submit</code> 事件里调用，自定义校验规则即可：<br />
+              <code class="site-code">// 示例：校验”用户名必填 + 密码至少6位”
+var errs = validateForm(form, [
+  { name: 'username', label: '用户名', required: true },
+  { name: 'password', label: '密码', required: true, minLen: 6 }
+]);
+if (errs.length) {
+  showAlert(alertEl, errs[0]);  // 显示第一条错误
+  return;
+}
+// 通过校验，继续执行...</code>
+            </div>
+            <div class="site-row">
+              <button class="p5-btn-ctn p5-hover-animation-mix" data-route="login" type="button">去登录页验证</button>
+              <button class="p5-btn-ctn p5-hover-animation-gray" data-route="contact" type="button">去联系我们验证</button>
+            </div>
+          </section>
+
+          <!-- 3.2 用户状态：在侧栏展示用户名 -->
+          <section class="site-section" id="feature-userstate">
+            <h2 class="p5-title-ctn"><span>用户状态（登录状态持久化）</span></h2>
+            <div class="site-section__help show-plain">
+              登录成功后，把用户名存入 <code>localStorage</code>，侧栏的”当前用户”区域会自动显示。刷新页面也不会丢失（直到你退出登录）。<br /><br />
+              <strong>如何复用：</strong><br />
+              只需调用 <code>site.js</code> 里的 <code>setStoredUser(name)</code> 函数，传入用户名字符串即可：<br />
+              <code class="site-code">// 登录成功后调用（例如在你的表单 submit 里）
+setStoredUser("joker");   // 写入 localStorage 并刷新侧栏显示
+
+// 退出登录时调用
+setStoredUser("");        // 传空字符串清除用户名</code>
+              底层存储 key 是 <code>p5_username</code>，如果你不用 <code>setStoredUser</code> 也可以直接：<br />
+              <code class="site-code">localStorage.setItem("p5_username", "joker");   // 写入
+localStorage.removeItem("p5_username");          // 清除</code>
+            </div>
+          </section>
+
+          <!-- 3.4 图形绘制（canvas 文本绘制） -->
+          <section class="site-section" id="feature-canvas">
+            <h2 class="p5-title-ctn"><span>图形绘制（Canvas）</span></h2>
+            <div class="site-section__help show-plain">
+              Canvas 是 HTML 提供的”画布”标签，可以用 JS 在上面画文字、图形、图片。本 demo 演示：输入文字 → 选颜色 → 点击”绘制”，文字就会渲染在黑色画布上；点”清空”清除。<br /><br />
+              <strong>HTML 部分（复制这段到你的页面）：</strong><br />
+              <code class="site-code">&lt;!-- 画布，width/height 决定实际尺寸 --&gt;
+&lt;canvas id="drawCanvas" class="site-canvas" width="560" height="260"&gt;&lt;/canvas&gt;</code>
+              <strong>JS 部分（核心画文字逻辑，在 site.js 里）：</strong><br />
+              <code class="site-code">var canvas = document.getElementById("drawCanvas");
+var ctx = canvas.getContext("2d");
+// 背景
+ctx.fillStyle = "#000";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+// 文字
+ctx.font = "bold 32px sans-serif";
+ctx.fillStyle = "#ff0022";  // 换颜色就改这里
+ctx.fillText("你的文字", 40, 80);</code>
+              如果你只需要画图形（方块/圆/线），把 <code>fillText</code> 换成 <code>fillRect</code>/<code>arc</code>/<code>moveTo+lineTo</code> 即可，不需要改 HTML。
+            </div>
+
+            <div class="site-drawGrid">
+              <div class="site-drawPanel show-plain">
+                <label class="site-field">
+                  绘制文字：
+                  <input id="drawText" class="site-input" type="text" value="心之怪盗团" />
+                </label>
+                <label class="site-field">
+                  颜色：
+                  <select id="drawColor" class="site-input">
+                    <option value="#ffffff">白色</option>
+                    <option value="#ff0022">红色</option>
+                    <option value="#1cfeff">青色</option>
+                  </select>
+                </label>
+                <div class="site-row">
+                  <button class="p5-btn-ctn p5-hover-animation-mix" id="drawBtn" type="button">绘制</button>
+                  <button class="p5-btn-ctn p5-hover-animation-gray" id="clearCanvasBtn" type="button">清空</button>
+                </div>
+                <div class="site-note show-plain">
+                  注意：正文章在页面上用 <code>.show-plain</code>，不使用小字号 <code>.p5-text</code>。
+                </div>
+              </div>
+
+              <canvas id="drawCanvas" class="site-canvas" width="560" height="260"></canvas>
+            </div>
+          </section>
+
+          <!-- 3.6 拖放（拖图到购物车） -->
+          <section class="site-section" id="feature-dnd">
+            <h2 class="p5-title-ctn"><span>拖放（Drag &amp; Drop）</span></h2>
+            <div class="site-section__help show-plain">
+              拖放（Drag & Drop）：把左边的”物品”用鼠标按住拖到右边”收纳区”松开，物品会出现在收纳区并累计数量。<br /><br />
+              <strong>HTML 里只需两个区域（复制以下结构）：</strong><br />
+              <code class="site-code">&lt;!-- 可拖拽的物品：加 draggable="true" --&gt;
+&lt;div draggable="true" data-name="物品名称"&gt;物品名称&lt;/div&gt;
+
+&lt;!-- 放置目标区：不需要加特殊属性，JS 负责监听 --&gt;
+&lt;div id="dropCart"&gt;&lt;/div&gt;</code>
+              <strong>在 site.js 里，物品数据放在 <code>dragItemsData</code> 数组里（改这里来换内容）：</strong><br />
+              <code class="site-code">var dragItemsData = [
+  { name: "物品A", icon: "🗡️" },
+  { name: "物品B", icon: "🛡️" }
+];</code>
+              JS 的 <code>dragstart</code> / <code>drop</code> 事件都已在 site.js 里封装好，直接保留 id 名和 DOM 结构即可复用。
+            </div>
+
+            <div class="site-dndGrid">
+              <div class="site-dndLeft">
+                <div class="site-dndTitle show-plain">可拖拽物品</div>
+                <div class="site-draggables" id="dragItems"></div>
+              </div>
+
+              <div class="site-dndRight">
+                <div class="site-dndTitle show-plain">收纳区（放置后显示）</div>
+                <div class="site-row">
+                  <button class="p5-btn-ctn p5-hover-animation-gray site-cartClearBtn" id="cartClearBtn" type="button">
+                    清空收纳区
+                  </button>
+                </div>
+                <div class="site-cart" id="dropCart" aria-label="drop cart"></div>
+                <div class="site-cartMeta show-plain">
+                  数量：<strong id="cartCount">0</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3.7 分页导航（分页显示） -->
+          <section class="site-section" id="feature-pagination">
+            <h2 class="p5-title-ctn"><span>分页导航</span></h2>
+            <div class="site-section__help show-plain">
+              分页就是把一大堆内容拆成多页显示，底部有"上一页 / 页码 / 下一页"按钮。本 demo 每页显示 3 条，点击页码会切换内容。<br /><br />
+              <strong>HTML 只需两个容器（id 名要和 JS 对应）：</strong><br />
+              <code class="site-code">&lt;!-- 内容区 --&gt;
+&lt;div id="pageList" class="site-list"&gt;&lt;/div&gt;
+&lt;!-- 分页按钮区 --&gt;
+&lt;div id="pager" class="site-pager"&gt;&lt;/div&gt;</code>
+              <strong>在 site.js 里，改 <code>pageData</code> 数组换成你自己的内容（改这里）：</strong><br />
+              <code class="site-code">var pageData = [
+  { title: "条目1", desc: "描述文字" },
+  { title: "条目2", desc: "描述文字" },
+  // ... 想要几条就加几条
+];
+var PAGE_SIZE = 3;  // 每页显示几条，改这里</code>
+              JS 的渲染函数（<code>renderPage</code> / <code>renderPager</code>）会自动根据数组长度算出总页数，不需要手动计算。
+            </div>
+
+            <div class="site-pagination">
+              <div id="pageList" class="site-list"></div>
+              <div class="site-pager" id="pager"></div>
+            </div>
+          </section>
+
+          <!-- 4.1 CROWD：帧动画展示（额外素材与动画） -->
+          <section class="site-section" id="feature-crowd">
+            <h2 class="p5-title-ctn"><span>CROWD 帧动画（路人群众）</span></h2>
+            <div class="site-section__help show-plain">
+              这是 P5R 特有的"路人群众"动画：12 张帧图片循环切换，角色向左移动并淡出，造成城市人流穿行的效果。<br /><br />
+              <strong>如何在你的页面里加入这个动画（纯 CSS，不需要 JS）：</strong><br />
+              1) 确保已引入 <code>shared/p5ui/css/p5-ui.css</code>（它内部已内嵌了所有帧图片和动画关键帧）。<br />
+              2) 在你的 HTML 里加一个空 div：<br />
+              <code class="site-code">&lt;div class="site-crowd" aria-label="crowd frames"&gt;&lt;/div&gt;</code>
+              3) 在 <code>site.css</code> 里已有对应样式（搜索 <code>.site-crowd</code>）。如果你用的是独立 CSS 文件，复制以下样式即可：<br />
+              <code class="site-code">.site-crowd {
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+  position: relative;
+  background: transparent;
+  /* p5-ui.css 里已定义 .p5-crowd 帧动画 class */
+}</code>
+              注意：容器尺寸固定（宽满 · 高 130px），超出范围的部分会被 <code>overflow:hidden</code> 裁掉，就像角色走进画面再走出去的感觉。
+            </div>
+            <div class="site-crowd" aria-label="crowd frames"></div>
+          </section>
+
+          <!-- p5-ui-main 组件库：移植用法合集（同页展示） -->
+          <section class="site-section" id="feature-p5ui">
+            <h2 class="p5-title-ctn"><span>p5-ui 组件库（全部组件 · 复制即用）</span></h2>
+            <div class="site-section__help show-plain">
+              下面这些 UI 组件全部来自 <code>p5-ui-main</code>，已移植为纯 HTML+CSS+原生 JS，<strong>不需要 Vue，可以直接复制到你的页面里用</strong>。<br /><br />
+              <strong>前置步骤（每个页面都要做）：</strong><br />
+              1) 在 <code>&lt;head&gt;</code> 里引入样式（路径根据你页面的位置调整，<code>../</code> 表示上一级目录）：<br />
+              <code class="site-code">&lt;link rel="stylesheet" href="../../shared/p5ui/css/p5-ui.css" /&gt;
+&lt;!-- 如果还需要 SVG 图标，再加这两行 script --&gt;
+&lt;script src="../../p5-ui-main/src/assets/svgs/p5-icon-btn.js"&gt;&lt;/script&gt;
+&lt;script src="../../p5-ui-main/src/assets/svgs/p5-icon-party.js"&gt;&lt;/script&gt;</code>
+              2) 在 <code>&lt;body&gt;</code> 里引入交互脚本（如果你需要开关/上传/通知/消息等交互，把 <code>site.js</code> 或 JS 代码段复制到你的页面）：<br />
+              <code class="site-code">&lt;script src="../../test/site.js"&gt;&lt;/script&gt;
+&lt;!-- 或者把 site.js 里你需要的函数段复制到自己的 js 文件里 --&gt;</code>
+              下面每个子模块都列出了"完整可用的 HTML 结构"，复制粘贴到 <code>&lt;body&gt;</code> 里就能看到效果。
+            </div>
+
+            <div class="site-subSection" id="p5ui-btn">
+              <h3 class="p5-title-ctn"><span>Button / Title / Divider</span></h3>
+              <div class="site-row">
+                <button class="p5-btn-ctn p5-hover-animation-mix" type="button">START</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" type="button">CONTACT</button>
+              </div>
+              <div class="p5-divider-ctn p5-divider-horizontal" style="margin-top: 14px"></div>
+              <div class="show-plain site-miniHelp">
+                <strong>Button（按钮）</strong> — 纯 CSS，不需要 JS。复制以下 HTML 即用：<br />
+                <code class="site-code">&lt;!-- 红色主色调按钮 --&gt;
+&lt;button class="p5-btn-ctn p5-hover-animation-mix" type="button"&gt;按钮文字&lt;/button&gt;
+
+&lt;!-- 灰色次要按钮 --&gt;
+&lt;button class="p5-btn-ctn p5-hover-animation-gray" type="button"&gt;按钮文字&lt;/button&gt;</code>
+                <strong>Title（标题）</strong> — 大红色倾斜标题样式，注意里面必须有一个 <code>&lt;span&gt;</code>：<br />
+                <code class="site-code">&lt;h2 class="p5-title-ctn"&gt;&lt;span&gt;标题文字&lt;/span&gt;&lt;/h2&gt;
+&lt;!-- 标签可以是 h1~h6 或 div，class 不变就行 --&gt;</code>
+                <strong>Divider（分割线）</strong> — 一条红色装饰分割线：<br />
+                <code class="site-code">&lt;!-- 横向（水平）分割线 --&gt;
+&lt;div class="p5-divider-ctn p5-divider-horizontal"&gt;&lt;/div&gt;
+
+&lt;!-- 纵向（垂直）分割线 --&gt;
+&lt;div class="p5-divider-ctn p5-divider-vertical"&gt;&lt;/div&gt;</code>
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-slider">
+              <h3 class="p5-title-ctn"><span>Slider（滑动条）</span></h3>
+              <div class="p5-slider-ctn">
+                <span class="show-plain" style="font-size: 12px; transform: rotate(-4deg); display: inline-block">LOW</span>
+                <div class="p5-slider-bg">
+                  <span class="p5-slider-icon show-plain" style="font-size: 12px; padding: 4px; display: inline-block">HP</span>
+                  <input class="p5-slider-progress p5-slider-progress-static" type="range" min="0" max="100" value="40" />
+                </div>
+                <span class="show-plain" style="font-size: 12px; transform: rotate(4deg); display: inline-block">HIGH</span>
+              </div>
+              <div class="show-plain site-miniHelp">
+                P5R 风格的血量/数值滑条。纯 CSS，不需要 JS（只是展示用），如果需要读取值才加 JS。<br />
+                完整可用的 HTML 结构如下（直接复制）：<br />
+                <code class="site-code">&lt;div class="p5-slider-ctn"&gt;
+  &lt;span class="show-plain"&gt;LOW&lt;/span&gt;
+  &lt;div class="p5-slider-bg"&gt;
+    &lt;span class="p5-slider-icon show-plain"&gt;HP&lt;/span&gt;  &lt;!-- 标签文字改这里 --&gt;
+    &lt;input class="p5-slider-progress p5-slider-progress-static"
+           type="range" min="0" max="100" value="60" /&gt;  &lt;!-- value 是初始值 --&gt;
+  &lt;/div&gt;
+  &lt;span class="show-plain"&gt;HIGH&lt;/span&gt;
+&lt;/div&gt;</code>
+                如需在用户拖动时实时读取值，加一行 JS：<br />
+                <code class="site-code">document.querySelector(".p5-slider-progress").addEventListener("input", function() {
+  console.log("当前值：", this.value);
+});</code>
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-switch">
+              <h3 class="p5-title-ctn"><span>Switch（开关）</span></h3>
+              <div class="site-row">
+                <div class="p5-switch-ctn p5-switch-size-medium p5-switch-off" data-p5-switch>
+                  <input type="checkbox" aria-label="switch" />
+                  <div class="p5-switch-bg-ctn"><span class="p5-switch-bg"></span></div>
+                  <span class="p5-switch-icon"></span>
+                  <span class="p5-switch-sub-icon"></span>
+                </div>
+              </div>
+              <div class="show-plain site-miniHelp">
+                点击可以切换开/关状态，视觉效果已由 CSS 实现。<strong>需要 site.js 里的 JS</strong> 才能响应点击。<br />
+                完整 HTML 结构（复制整段，包括里面所有 span 和 input，不能少）：<br />
+                <code class="site-code">&lt;!-- 初始关闭：p5-switch-off；初始打开：p5-switch-on --&gt;
+&lt;!-- 尺寸：p5-switch-size-small / medium / large --&gt;
+&lt;div class="p5-switch-ctn p5-switch-size-medium p5-switch-off" data-p5-switch&gt;
+  &lt;input type="checkbox" aria-label="switch" /&gt;
+  &lt;div class="p5-switch-bg-ctn"&gt;&lt;span class="p5-switch-bg"&gt;&lt;/span&gt;&lt;/div&gt;
+  &lt;span class="p5-switch-icon"&gt;&lt;/span&gt;
+  &lt;span class="p5-switch-sub-icon"&gt;&lt;/span&gt;
+&lt;/div&gt;</code>
+                <strong>JS 如何工作（site.js 里已有，不需要自己写）：</strong><br />
+                site.js 会自动找到所有带 <code>data-p5-switch</code> 的元素并绑定点击事件，
+                点击时切换 <code>p5-switch-on</code> / <code>p5-switch-off</code> 这两个 class 来改变外观。<br />
+                如果你想监听状态变化，在 JS 里这样写：<br />
+                <code class="site-code">var sw = document.querySelector("[data-p5-switch]");
+sw.addEventListener("click", function() {
+  var isOn = sw.classList.contains("p5-switch-on");
+  console.log("开关状态：", isOn ? "开" : "关");
+});</code>
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-table">
+              <h3 class="p5-title-ctn"><span>Table（数据表格）</span></h3>
+              <div class="p5-table-ctn p5-scrollbar" style="max-height: 180px">
+                <table cellspacing="0">
+                  <thead>
+                    <tr><th>名称</th><th>类型</th><th>难度</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr class="p5-tr-onhover"><td>目标A</td><td>委托</td><td>★★</td></tr>
+                    <tr class="p5-tr-onhover"><td>目标B</td><td>宫殿</td><td>★★★</td></tr>
+                    <tr class="p5-tr-onhover"><td>目标C</td><td>档案</td><td>★</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="show-plain site-miniHelp">
+                P5R 风格的数据表格，行 hover 高亮，内容多时可滚动。纯 HTML+CSS，不需要 JS。<br />
+                完整 HTML 结构（把表头和数据换成你的内容）：<br />
+                <code class="site-code">&lt;!-- max-height 决定表格最大高度，超出可滚动；去掉则不限高 --&gt;
+&lt;div class="p5-table-ctn p5-scrollbar" style="max-height: 200px"&gt;
+  &lt;table cellspacing="0"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;列标题1&lt;/th&gt;
+        &lt;th&gt;列标题2&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;!-- 每行加 p5-tr-onhover 才有悬停高亮 --&gt;
+      &lt;tr class="p5-tr-onhover"&gt;
+        &lt;td&gt;数据1&lt;/td&gt;
+        &lt;td&gt;数据2&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code>
+                注意：<code>cellspacing="0"</code> 这个属性不能去掉，否则单元格间距会不对。
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-upload">
+              <h3 class="p5-title-ctn"><span>Upload（图片上传/预览）</span></h3>
+              <div class="p5-upload-ctn" id="p5UploadDemo">
+                <img class="p5-upload-preview" src="../shared/p5ui/assets/src-assets/images/upload/default.png" alt="upload img">
+                <img class="p5-upload-delete" hidden src="../shared/p5ui/assets/src-assets/images/upload/close.png" alt="delete">
+                <img class="p5-star" style="top:10px; left:-15px" src="../shared/p5ui/assets/src-assets/images/upload/star.png" alt="">
+                <img class="p5-star" style="top:40px; right:-15px" src="../shared/p5ui/assets/src-assets/images/upload/star.png" alt="">
+                <img class="p5-zoom" style="bottom:-15px; right:-15px" src="../shared/p5ui/assets/src-assets/images/upload/zoom.png" alt="">
+                <input type="file" accept="image/*">
+              </div>
+              <div class="show-plain site-miniHelp">
+                点击选择图片，也可以直接拖拽图片文件进来，选中后会显示预览图，hover 出现×删除按钮，右下角放大镜可全屏预览。<br />
+                <strong>需要 site.js 里的 JS 来完成交互（文件读取/拖拽/删除/放大）。</strong><br /><br />
+                完整 HTML 结构（路径请根据你的页面位置调整 <code>../../</code>）：<br />
+                <code class="site-code">&lt;div class="p5-upload-ctn"&gt;
+  &lt;img class="p5-upload-preview"
+       src="../../shared/p5ui/assets/src-assets/images/upload/default.png" alt="upload img"&gt;
+  &lt;img class="p5-upload-delete" hidden
+       src="../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="delete"&gt;
+  &lt;img class="p5-star" style="top:10px; left:-15px"
+       src="../../shared/p5ui/assets/src-assets/images/upload/star.png" alt=""&gt;
+  &lt;img class="p5-star" style="top:40px; right:-15px"
+       src="../../shared/p5ui/assets/src-assets/images/upload/star.png" alt=""&gt;
+  &lt;img class="p5-zoom" style="bottom:-15px; right:-15px"
+       src="../../shared/p5ui/assets/src-assets/images/upload/zoom.png" alt=""&gt;
+  &lt;input type="file" accept="image/*"&gt;
+&lt;/div&gt;
+
+&lt;!-- 放大预览用的全屏层（放在 body 末尾，一个页面只需要一个）--&gt;
+&lt;div id="p5Zoom" class="p5-zoom-ctn" style="display:none;"&gt;
+  &lt;div class="p5-zoom-sub-ctn"&gt;
+    &lt;img class="p5-zoom-img" src="" alt="zoom"&gt;
+    &lt;img class="p5-zoom-close"
+         src="../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close"&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code>
+                site.js 会自动找页面上所有 <code>.p5-upload-ctn</code> 并绑定全部交互，无需额外调用任何函数，复制 DOM 就能用。
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-notify">
+              <h3 class="p5-title-ctn"><span>Notification / Message / BackTop</span></h3>
+              <div class="site-row">
+                <button class="p5-btn-ctn p5-hover-animation-mix" id="btnShowNoti" type="button">弹出通知</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" id="btnShowMsgDefault" type="button">消息-默认</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" id="btnShowMsgClear" type="button">消息-清除</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" id="btnShowMsgFail" type="button">消息-失败</button>
+              </div>
+              <div class="show-plain site-miniHelp">
+                这三个组件都是<strong>浮动层</strong>，通过 JS 函数调用触发，不是写在页面内容里的。<br /><br />
+
+                <strong>① Notification（角色对话通知）</strong> — 左侧出现角色头像+对话框，3秒后消失：<br />
+                需要在 <code>&lt;body&gt;</code> 末尾放一个宿主 div（已在 demo 里，搜索 <code>id="p5Noti"</code>），然后调用：<br />
+                <code class="site-code">// site.js 里已有封装好的函数，直接调用：
+showNoti("通知内容文字");
+// 角色头像在 site.js 里 showNoti 函数内，改 p5-portrait-img 的 src 换人物</code>
+
+                <strong>② Message（剑动画弹出消息）</strong> — 顶部弹出一条带剑动画的消息条，自动消失：<br />
+                需要在 <code>&lt;body&gt;</code> 末尾有 <code>&lt;div id="p5MsgHost"&gt;&lt;/div&gt;</code>，然后调用：<br />
+                <code class="site-code">showMsg("default"); // default / clear / fail</code>
+
+                <strong>③ BackTop（回到顶部按钮）</strong> — 滚动超过一定距离后右下角出现，点击回到顶部：<br />
+                需要在 <code>&lt;body&gt;</code> 末尾有 <code>&lt;div id="p5BackTop" class="p5-top-ctn" hidden&gt;...&lt;/div&gt;</code>，
+                site.js 会自动监听滚动并控制显示/隐藏，无需额外调用。<br /><br />
+
+                <strong>这三个组件的宿主 HTML（放在 body 闭合标签前）：</strong><br />
+                <code class="site-code">&lt;!-- Notification 宿主 --&gt;
+&lt;div id="p5Noti" class="p5-noti-ctn" style="display:none; top:100px; left:20px;"&gt;
+  &lt;div class="p5-noti-sub-ctn"&gt;
+    &lt;img class="p5-portrait-img"
+         src="../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt=""&gt;
+    &lt;div class="p5-dialog-ctn"&gt;
+      &lt;img class="p5-dialog-img"
+           src="../../shared/p5ui/assets/src-assets/images/notification.png" alt=""&gt;
+      &lt;div class="p5-noti-title"&gt;
+        &lt;p class="p5-title-ctn text-size-small"&gt;&lt;span&gt;摩尔 加纳&lt;/span&gt;&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class="p5-noti-text"&gt;通知内容文字&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Message 宿主 --&gt;
+&lt;div id="p5MsgHost"&gt;&lt;/div&gt;
+
+&lt;!-- BackTop 宿主 --&gt;
+&lt;div id="p5BackTop" class="p5-top-ctn" hidden style="right:28px; bottom:28px;"&gt;
+  &lt;img src="../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top"&gt;
+&lt;/div&gt;</code>
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-icon">
+              <h3 class="p5-title-ctn"><span>SVG 图标（人物/按钮图标）</span></h3>
+              <div class="site-row">
+                <div class="p5-svg-ctn">
+                  <svg class="p5-svg-btn" aria-hidden="true"><use href="#back" xlink:href="#back"></use></svg>
+                </div>
+                <div class="p5-svg-ctn">
+                  <svg class="p5-svg-party" aria-hidden="true"><use href="#akechi" xlink:href="#akechi"></use></svg>
+                </div>
+              </div>
+              <div class="show-plain site-miniHelp">
+                SVG 图标分两种：<strong>按钮图标</strong>（back/next 等箭头类）和<strong>人物图标</strong>（P5R 角色肖像）。<br /><br />
+                <strong>第一步：在 &lt;head&gt; 里引入图标定义脚本（必须）：</strong><br />
+                <code class="site-code">&lt;script src="../../p5-ui-main/src/assets/svgs/p5-icon-btn.js"&gt;&lt;/script&gt;
+&lt;script src="../../p5-ui-main/src/assets/svgs/p5-icon-party.js"&gt;&lt;/script&gt;</code>
+                <strong>第二步：在页面里写 &lt;svg use&gt; 引用（把 #back 或 #akechi 换成你要的图标名）：</strong><br />
+                <code class="site-code">&lt;!-- 按钮图标 --&gt;
+&lt;div class="p5-svg-ctn"&gt;
+  &lt;svg class="p5-svg-btn" aria-hidden="true"&gt;
+    &lt;use href="#back" xlink:href="#back"&gt;&lt;/use&gt;
+  &lt;/svg&gt;
+&lt;/div&gt;
+
+&lt;!-- 人物图标 --&gt;
+&lt;div class="p5-svg-ctn"&gt;
+  &lt;svg class="p5-svg-party" aria-hidden="true"&gt;
+    &lt;use href="#akechi" xlink:href="#akechi"&gt;&lt;/use&gt;
+  &lt;/svg&gt;
+&lt;/div&gt;</code>
+                <strong>可用的图标名称</strong>（在 <code>p5-icon-btn.js</code> / <code>p5-icon-party.js</code> 文件里搜索 <code>id=</code> 查看）：<br />
+                · 按钮类（p5-svg-btn）：<code>#back</code>、<code>#next</code> 等<br />
+                · 人物类（p5-svg-party）：<code>#akechi</code>、<code>#mona</code>、<code>#anne</code>、<code>#ryuji</code> 等角色名
+              </div>
+            </div>
+
+            <div class="site-subSection" id="p5ui-text">
+              <h3 class="p5-title-ctn"><span>Text（正文文字样式）</span></h3>
+              <div class="site-row" style="flex-wrap:wrap; gap:10px; align-items:baseline">
+                <span class="p5-text text-size-small show-plain">small 小字号</span>
+                <span class="p5-text show-plain">medium 默认字号</span>
+                <span class="p5-text text-size-large show-plain">large 大字号</span>
+                <span class="p5-text text-size-extra-large show-plain">extra-large 超大</span>
+              </div>
+              <div class="show-plain site-miniHelp">
+                <code>.p5-text</code> 是 P5R 风格的正文文字 class，有四种尺寸。纯 CSS，不需要 JS。<br />
+                <strong>注意：<code>.p5-text</code> 会让文字很小并使用 P5R 字体，正文段落建议搭配 <code>.show-plain</code> 避免字体混乱。</strong><br /><br />
+                用法（直接加 class，标签不限）：<br />
+                <code class="site-code">&lt;!-- 四种尺寸 --&gt;
+&lt;span class="p5-text text-size-small"&gt;小字号说明文字&lt;/span&gt;
+&lt;span class="p5-text"&gt;默认字号（medium）&lt;/span&gt;
+&lt;span class="p5-text text-size-large"&gt;大字号强调文字&lt;/span&gt;
+&lt;span class="p5-text text-size-extra-large"&gt;超大字号展示&lt;/span&gt;
+
+&lt;!-- 正文段落（不用 .p5-text，用 .show-plain 保持清晰可读）--&gt;
+&lt;p class="show-plain"&gt;这是正常可读的正文段落，推荐正文都加 show-plain。&lt;/p&gt;</code>
+                常见用途：在 Notification 里的小标题（<code>text-size-small</code>），Slider 里的数值标签（<code>.p5-text</code>）。
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- 登录页 -->
+        <section id="page-login" class="site-page">
+          <div class="site-section site-section--wide">
+            <h2 class="p5-title-ctn"><span>登录页（3.1 数据验证演示）</span></h2>
+            <div class="site-section__help show-plain">
+              点击“提交”，会进行格式校验：
+              1) 用户名不能为空；2) 邮箱格式正确；3) 密码长度 >= 6。
+              校验失败会在表单上方弹出提示框（纯 JS）。
+            </div>
+
+            <div id="formAlert" class="site-alert" role="alert" aria-live="polite" hidden></div>
+
+            <form id="loginForm" class="site-form">
+              <label class="site-field">
+                用户名：
+                <input class="site-input" name="username" type="text" autocomplete="off" />
+              </label>
+              <label class="site-field">
+                邮箱：
+                <input class="site-input" name="email" type="email" autocomplete="off" />
+              </label>
+              <label class="site-field">
+                密码：
+                <input class="site-input" name="password" type="password" autocomplete="off" />
+              </label>
+              <div class="site-row">
+                <button class="p5-btn-ctn p5-hover-animation-mix" type="submit">提交</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" type="button" data-back="home">返回主页</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- 联系我们页 -->
+        <section id="page-contact" class="site-page">
+          <div class="site-section site-section--wide">
+            <h2 class="p5-title-ctn"><span>联系我们（3.1 数据验证演示）</span></h2>
+            <div class="site-section__help show-plain">
+              点击“提交联系信息”，会校验：
+              1) 姓名不能为空；2) 邮箱格式正确；3) 留言不能为空。
+              错误会弹出提示框。
+            </div>
+
+            <div id="formAlert2" class="site-alert" role="alert" aria-live="polite" hidden></div>
+
+            <form id="contactForm" class="site-form">
+              <label class="site-field">
+                姓名：
+                <input class="site-input" name="name" type="text" autocomplete="off" />
+              </label>
+              <label class="site-field">
+                邮箱：
+                <input class="site-input" name="email" type="email" autocomplete="off" />
+              </label>
+              <label class="site-field">
+                留言：
+                <textarea class="site-input" name="message" rows="5"></textarea>
+              </label>
+              <div class="site-row">
+                <button class="p5-btn-ctn p5-hover-animation-mix" type="submit">提交</button>
+                <button class="p5-btn-ctn p5-hover-animation-gray" type="button" data-back="home">返回主页</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer show-plain">
+      <div class="site-footer__row">
+        版权信息：示例站（不包含实际内容）
+      </div>
+      <div class="site-footer__row">
+        技术支持/分享链接：可在这里替换成你们的内容（保持样式一致）
+      </div>
+    </footer>
+
+    <!-- p5-ui：Notification（固定层，支持多条堆叠） -->
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <!-- Notification 模板：JS 会 clone 它并插入到 p5NotiHost -->
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display:none;">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="">
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../shared/p5ui/assets/src-assets/images/notification.png" alt="">
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例：3 秒后自动隐藏。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- p5-ui：Message 宿主 -->
+    <div id="p5MsgHost"></div>
+
+    <!-- p5-ui：BackTop -->
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px;">
+      <img src="../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top">
+    </div>
+
+    <!-- p5-ui：Zoom 预览层（给 upload 用） -->
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display:none;">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom">
+        <img class="p5-zoom-close" src="../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close">
+      </div>
+    </div>
+
+    <script src="./site.js"></script>
+  </body>
+</html>
+

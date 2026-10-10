@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>卡片抽取</title>
+
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../characters.css" />
+    <link rel="stylesheet" href="../card-draw.css" />
+  </head>
+
+  <body class="p5r-characters" data-p5r-page="card-draw">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a
+                class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item is-current"
+                href="../../player4/pages/card-draw.html"
+                aria-current="page"
+                >卡片抽取</a
+              >
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="p5r-cardDrawMain" aria-label="卡片抽取">
+      <div class="p5r-cardDraw__scaler">
+        <div class="p5r-cardDraw__stage" id="p5rCardStage">
+          <div class="p5r-cardDraw__fan is-stacked" id="p5rCardFan">
+          <button type="button" class="p5r-cardDraw__card" aria-label="卡牌 1">
+            <span class="p5r-cardDraw__cardInner">
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--back">
+                <span class="p5r-cardDraw__backArt" aria-hidden="true"></span>
+              </span>
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--front">
+                <img src="" alt="" decoding="async" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="p5r-cardDraw__card" aria-label="卡牌 2">
+            <span class="p5r-cardDraw__cardInner">
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--back">
+                <span class="p5r-cardDraw__backArt" aria-hidden="true"></span>
+              </span>
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--front">
+                <img src="" alt="" decoding="async" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="p5r-cardDraw__card" aria-label="卡牌 3">
+            <span class="p5r-cardDraw__cardInner">
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--back">
+                <span class="p5r-cardDraw__backArt" aria-hidden="true"></span>
+              </span>
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--front">
+                <img src="" alt="" decoding="async" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="p5r-cardDraw__card" aria-label="卡牌 4">
+            <span class="p5r-cardDraw__cardInner">
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--back">
+                <span class="p5r-cardDraw__backArt" aria-hidden="true"></span>
+              </span>
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--front">
+                <img src="" alt="" decoding="async" />
+              </span>
+            </span>
+          </button>
+          <button type="button" class="p5r-cardDraw__card" aria-label="卡牌 5">
+            <span class="p5r-cardDraw__cardInner">
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--back">
+                <span class="p5r-cardDraw__backArt" aria-hidden="true"></span>
+              </span>
+              <span class="p5r-cardDraw__face p5r-cardDraw__face--front">
+                <img src="" alt="" decoding="async" />
+              </span>
+            </span>
+          </button>
+        </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="p5rCardVcard"
+      class="p5r-cardDraw__vcardLayer"
+      hidden
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label="人物立绘"
+    >
+      <div class="p5r-cardDraw__vcardBackdrop" aria-hidden="true"></div>
+      <button type="button" class="p5r-cardDraw__vcardClose" id="p5rCardVcardClose" aria-label="关闭">
+        ×
+      </button>
+      <div class="p5r-cardDraw__vcardScene" aria-hidden="false">
+        <div class="p5r-cardDraw__vcardAnchor" id="p5rCardVcardAnchor" aria-hidden="true">
+          <div class="p5r-cardDraw__vcardPair" id="p5rCardVcardPair">
+            <div class="p5r-cardDraw__vcardPortraitShell">
+              <div class="p5r-cardDraw__vcardPortraitInner">
+                <img class="p5r-cardDraw__vcardFigure" id="p5rCardVcardFig" src="" alt="" decoding="async" />
+              </div>
+            </div>
+            <div class="p5r-cardDraw__vcardCardShell" id="p5rCardVcardCardShell"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display:none;">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="p5MsgHost"></div>
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px;">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display:none;">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom" />
+        <img class="p5-zoom-close" src="../../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close" />
+      </div>
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script src="../card-draw.js"></script>
+  </body>
+</html>

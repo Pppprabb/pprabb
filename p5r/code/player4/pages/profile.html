@@ -1,0 +1,1911 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人主页</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../characters.css" />
+    <style>
+      /* 避免刷新时头像图片“闪到页面上” */
+      html:not(.p5r-ready) .p5r-about__avatar,
+      html:not(.p5r-ready) .p5r-profileEntry{
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      // 防止全局淡出状态残留导致刷新“黑一下”
+      document.documentElement.classList.remove("is-leaving");
+      document.documentElement.style.opacity = "1";
+      window.addEventListener("DOMContentLoaded", function () {
+        document.documentElement.classList.add("p5r-ready");
+      });
+    </script>
+  </head>
+  <body class="p5r-characters" data-p5r-page="profile">
+    <header class="p5r-header" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 固定版心：与日历/预告信同幅滚动，避免 fixed 侧栏在缩放或横向滚动时错位 -->
+    <div class="p5r-shell">
+    <!-- Banner（约 3cm，和 Header 重叠：Banner 从页面顶部开始铺） -->
+    <section class="p5r-banner" aria-label="banner">
+      <img
+        class="p5r-banner__bg"
+        src="../image/profile/1.png"
+        alt=""
+      />
+      <div class="p5r-banner__veil" aria-hidden="true"></div>
+      <div class="p5r-profileBanner__content" aria-label="标题与按钮">
+        <h1 class="p5r-profileTitle p5r-profileTitle--onBanner" aria-label="Hello, I'M Mao Siyu">
+          <span class="p5r-profileTitle__line" data-jitter-text="Hello,I'M"></span>
+          <span class="p5r-profileTitle__line p5r-profileTitle__line--name" data-jitter-text="Mao Siyu"></span>
+        </h1>
+        <div class="p5r-profileBanner__cta">
+          <button class="p5-btn-ctn p5-hover-animation-mix p5r-breatheBtn" type="button">
+            ENTER MY WORLD
+          </button>
+        </div>
+      </div>
+    </section>
+
+      <main class="p5r-profileMain" aria-label="个人主页内容">
+        <!-- About Me：浅红色区域，左头像约 4cm 圆形 -->
+        <section class="p5r-about" aria-label="About Me">
+          <div class="p5r-about__cap" aria-hidden="true">
+            <div class="p5r-about__capBox"></div>
+            <h2 class="p5r-work__title p5r-about__capTitle">About Me</h2>
+          </div>
+          <div class="p5r-about__inner">
+            <div class="p5r-about__avatarWrap" aria-hidden="true">
+              <img class="p5r-about__avatar" src="../image/profile/2.png" alt="" />
+            </div>
+            <div class="p5r-about__text">
+              <p class="p5r-about__desc">
+                我是毛思瑜（Mao Siyu）。喜欢把网页做成“能动起来”的舞台：偏执的排版、克制的颜色、以及一点点不讲道理的动效。
+                这页是我的个人展板：更像角色卡片，而不是传统简历。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- My Work：标题宽约 6cm；四个作品卡，两行两列，图片上覆盖文字遮罩 -->
+        <section class="p5r-work" aria-label="My Work">
+          <div class="p5r-work__cap">
+            <div class="p5r-work__capBox" aria-hidden="true"></div>
+            <h2 class="p5r-work__title">My Work</h2>
+          </div>
+
+          <div class="p5r-workGrid" role="list">
+            <article class="p5r-workCard" role="listitem">
+              <button class="p5r-workCard__close" type="button" aria-label="删除图片">×</button>
+              <img class="p5r-workCard__img" src="../image/profile/11.png" alt="work 11" />
+              <div class="p5r-workCard__mask" aria-hidden="true"></div>
+              <div class="p5r-workCard__text">
+                <div class="p5r-workCard__name">Project 11</div>
+                <div class="p5r-workCard__meta">视觉实验 · Layout</div>
+              </div>
+            </article>
+
+            <article class="p5r-workCard" role="listitem">
+              <button class="p5r-workCard__close" type="button" aria-label="删除图片">×</button>
+              <img class="p5r-workCard__img" src="../image/profile/22.png" alt="work 22" />
+              <div class="p5r-workCard__mask" aria-hidden="true"></div>
+              <div class="p5r-workCard__text">
+                <div class="p5r-workCard__name">Project 22</div>
+                <div class="p5r-workCard__meta">交互 · Motion</div>
+              </div>
+            </article>
+
+            <article class="p5r-workCard" role="listitem">
+              <button class="p5r-workCard__close" type="button" aria-label="删除图片">×</button>
+              <img class="p5r-workCard__img" src="../image/profile/33.png" alt="work 33" />
+              <div class="p5r-workCard__mask" aria-hidden="true"></div>
+              <div class="p5r-workCard__text">
+                <div class="p5r-workCard__name">Project 33</div>
+                <div class="p5r-workCard__meta">UI · Component</div>
+              </div>
+            </article>
+
+            <article class="p5r-workCard" role="listitem">
+              <button class="p5r-workCard__close" type="button" aria-label="删除图片">×</button>
+              <img class="p5r-workCard__img" src="../image/profile/44.png" alt="work 44" />
+              <div class="p5r-workCard__mask" aria-hidden="true"></div>
+              <div class="p5r-workCard__text">
+                <div class="p5r-workCard__name">Project 44</div>
+                <div class="p5r-workCard__meta">插画 · Collage</div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- What I Do：三张横向卡片（上图下文） -->
+        <section class="p5r-whatIDo" aria-label="What I Do">
+          <div class="p5r-whatIDo__cap">
+            <div class="p5r-whatIDo__capBox" aria-hidden="true"></div>
+            <h2 class="p5r-whatIDo__title">What I Do</h2>
+          </div>
+
+          <div class="p5r-whatIDoGrid" role="list">
+            <article class="p5r-whatCard" role="listitem">
+              <img class="p5r-whatCard__float" src="../../../皇家p5r/人物素材/人物素材 (5).png" alt="" aria-hidden="true" />
+              <div class="p5r-whatCard__clip">
+                <div class="p5r-whatCard__media">
+                  <img src="../../../皇家p5r/人物素材/人物素材 (5).png" alt="人物素材 5" />
+                </div>
+                <div class="p5r-whatCard__body">
+                  <div class="p5r-whatCard__name">UI 视觉编排</div>
+                  <div class="p5r-whatCard__desc">用偏执的版式、斜切与对比，把内容做成“舞台感”的展示页。</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="p5r-whatCard" role="listitem">
+              <img class="p5r-whatCard__float" src="../../../皇家p5r/人物素材/人物素材 (9).png" alt="" aria-hidden="true" />
+              <div class="p5r-whatCard__clip">
+                <div class="p5r-whatCard__media">
+                  <img src="../../../皇家p5r/人物素材/人物素材 (9).png" alt="人物素材 9" />
+                </div>
+                <div class="p5r-whatCard__body">
+                  <div class="p5r-whatCard__name">交互动效</div>
+                  <div class="p5r-whatCard__desc">用轻量 JS + CSS 动画实现关键动效，让页面更像在“呼吸”。</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="p5r-whatCard" role="listitem">
+              <img class="p5r-whatCard__float" src="../../../皇家p5r/人物素材/人物素材 (10).png" alt="" aria-hidden="true" />
+              <div class="p5r-whatCard__clip">
+                <div class="p5r-whatCard__media">
+                  <img src="../../../皇家p5r/人物素材/人物素材 (10).png" alt="人物素材 10" />
+                </div>
+                <div class="p5r-whatCard__body">
+                  <div class="p5r-whatCard__name">组件化落地</div>
+                  <div class="p5r-whatCard__desc">把想法拆成可复用的纯 HTML/CSS 组件，便于页面快速拼装。</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Get In Touch：自定义校验反馈（不使用浏览器弹窗） -->
+        <section class="p5r-touch" aria-label="Get In Touch">
+          <div class="p5r-touch__cap">
+            <div class="p5r-touch__capBox" aria-hidden="true"></div>
+            <h2 class="p5r-touch__title">Get In Touch</h2>
+          </div>
+
+          <form class="p5r-touchForm" id="touchForm" novalidate>
+            <div class="p5r-formFeedback" id="touchFeedback" role="status" aria-live="polite" hidden></div>
+
+            <div class="p5r-formGrid">
+              <label class="p5r-field">
+                <span class="p5r-field__label" data-jitter-text="姓名"></span>
+                <input class="p5r-input" name="name" type="text" autocomplete="name" placeholder="请输入姓名" />
+                <span class="p5r-field__err" data-err-for="name" aria-live="polite"></span>
+              </label>
+
+              <label class="p5r-field">
+                <span class="p5r-field__label" data-jitter-text="手机号"></span>
+                <input class="p5r-input" name="phone" type="text" inputmode="numeric" autocomplete="tel" placeholder="11位手机号" />
+                <span class="p5r-field__err" data-err-for="phone" aria-live="polite"></span>
+              </label>
+
+              <label class="p5r-field">
+                <span class="p5r-field__label" data-jitter-text="邮箱"></span>
+                <input class="p5r-input" name="email" type="text" inputmode="email" autocomplete="email" placeholder="name@example.com" />
+                <span class="p5r-field__err" data-err-for="email" aria-live="polite"></span>
+              </label>
+
+              <label class="p5r-field p5r-field--full">
+                <span class="p5r-field__label" data-jitter-text="建议（选填）"></span>
+                <textarea class="p5r-input p5r-textarea" name="suggest" rows="4" placeholder="选填，不写也可以……"></textarea>
+                <span class="p5r-field__err" data-err-for="suggest" aria-live="polite"></span>
+              </label>
+            </div>
+
+            <div class="p5r-touchActions">
+              <button class="p5-btn-ctn p5-hover-animation-mix" type="submit">发送</button>
+              <button class="p5-btn-ctn p5-hover-animation-gray" type="reset">清空</button>
+            </div>
+          </form>
+
+          <div class="p5r-signPad" aria-label="签名画布">
+            <div class="p5r-signPad__cap">
+              <div class="p5r-signPad__capBox" aria-hidden="true"></div>
+              <h3 class="p5r-signPad__title">Signature</h3>
+            </div>
+            <div class="p5r-signPad__board">
+              <canvas id="p5rSignatureCanvas" class="p5r-signPad__canvas" aria-label="签名区域"></canvas>
+            </div>
+            <div class="p5r-signPad__actions">
+              <button class="p5-btn-ctn p5-hover-animation-gray" type="button" id="p5rSignClear">清空签名</button>
+              <button class="p5-btn-ctn p5-hover-animation-mix" type="button" id="p5rSignSave">保存为PNG</button>
+              <label class="p5r-signPad__color">
+                <span class="p5r-signPad__colorText">画笔颜色</span>
+                <input id="p5rSignColor" class="p5r-signPad__colorInput" type="color" value="#ffffff" aria-label="选择画笔颜色" />
+              </label>
+              <label class="p5r-signPad__size">
+                <span class="p5r-signPad__sizeText">粗细</span>
+                <input
+                  id="p5rSignSize"
+                  class="p5r-signPad__sizeInput"
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="0.5"
+                  value="2.5"
+                  aria-label="选择画笔粗细"
+                />
+                <span class="p5r-signPad__sizeVal" id="p5rSignSizeVal" aria-hidden="true">2.5</span>
+              </label>
+            </div>
+            <div class="p5r-signPad__hint" aria-hidden="true">提示：可用鼠标/触摸/触控笔在画布上签名。</div>
+          </div>
+
+          <section class="p5r-miniGame" aria-label="Canvas 小游戏">
+            <div class="p5r-miniGame__cap">
+              <div class="p5r-miniGame__capBox" aria-hidden="true"></div>
+              <h3 class="p5r-miniGame__title">Mini Game</h3>
+              <div class="p5r-miniGame__meta" id="p5rMiniGameMeta" aria-live="polite">分数：0　最高：0</div>
+            </div>
+            <div class="p5r-miniGame__board">
+              <canvas id="p5rMiniGameCanvas" class="p5r-miniGame__canvas" aria-label="小游戏画布"></canvas>
+            </div>
+            <div class="p5r-miniGame__actions">
+              <button class="p5-btn-ctn p5-hover-animation-mix" type="button" id="p5rMiniGameStart">开始/继续</button>
+              <button class="p5-btn-ctn p5-hover-animation-gray" type="button" id="p5rMiniGamePause">暂停</button>
+              <button class="p5-btn-ctn p5-hover-animation-gray" type="button" id="p5rMiniGameReset">重新开始</button>
+            </div>
+            <div class="p5r-miniGame__hint" aria-hidden="true">玩法：左右移动接住落下的星星，漏掉 3 个就结束。支持鼠标/触摸拖动或方向键。</div>
+          </section>
+        </section>
+      </main>
+    </div><!-- .p5r-shell -->
+
+    <footer class="p5r-pageFooter" role="contentinfo">
+      <div class="p5r-pageFooter__inner">
+        <p class="p5r-pageFooter__line">姓名：毛思瑜</p>
+        <p class="p5r-pageFooter__line">学号：302024315100</p>
+        <p class="p5r-pageFooter__line">
+          gitee链接：<a href="https://gitee.com/maosiyu26/p5r" target="_blank" rel="noopener noreferrer">https://gitee.com/maosiyu26/p5r</a>
+        </p>
+      </div>
+    </footer>
+
+    <!-- 与 test/index 一致：Notification 宿主 + 模板（路径按本页位置） -->
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display:none;">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- p5-ui：Message 宿主 -->
+    <div id="p5MsgHost"></div>
+
+    <!-- p5-ui：BackTop（与 test/index.html 一致；逻辑见 ../../shared/site.js） -->
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px;">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+
+    <!-- 人物介绍：生成过场（全屏素材图淡入淡出） -->
+    <div class="p5r-bioGenOverlay" id="p5rBioGenOverlay" hidden aria-hidden="true">
+      <img class="p5r-bioGenOverlay__img" id="p5rBioGenOverlayImg" alt="" />
+    </div>
+
+    <!-- p5-ui：Zoom 预览层 -->
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display:none;">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom" />
+        <img class="p5-zoom-close" src="../../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close" />
+      </div>
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <style>
+      /* Profile page — custom sections (keep header/banner unchanged) */
+      .p5r-profileMain{
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        /* 贴紧 banner：顶部间距为 0 */
+        padding: 0 0 90px;
+      }
+
+      /* Profile：初始页眉与 banner 重叠（不占位），版心不预留顶栏高度 */
+      body[data-p5r-page="profile"] .p5r-shell{
+        padding: 0 var(--p5r-edgePad) 0;
+      }
+      /* Profile：banner 高度约 5cm */
+      body[data-p5r-page="profile"] .p5r-banner{
+        /* 高度调为当前的 1.5 倍 */
+        height: 7.5cm;
+        /* 横向比视口再宽 2cm（左右各多 1cm） */
+        width: calc(100vw + 2cm);
+        margin-left: calc(50% - 50vw - 1cm);
+      }
+
+      /* banner 改为 profile 的 1.png，并在 banner 内居中放标题/按钮 */
+      .p5r-banner{ background: #2a050c; }
+      .p5r-banner__bg{
+        /* 铺满页面宽度（允许裁切） */
+        object-fit: cover;
+        background: #2a050c;
+        filter:none;
+        object-position: center;
+      }
+      .p5r-banner__veil{
+        background:
+          radial-gradient(900px 380px at 20% 40%, rgba(255,0,34,.32), transparent 62%),
+          radial-gradient(900px 420px at 82% 52%, rgba(28,254,255,.14), transparent 62%),
+          linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.55));
+      }
+      .p5r-profileBanner__content{
+        position:absolute;
+        inset:0;
+        z-index: 2;
+        display:flex;
+        flex-direction: column;
+        align-items:center;
+        justify-content:center;
+        gap: 16px;
+        padding: 16px 18px;
+        text-align:center;
+        pointer-events:none;
+      }
+      .p5r-profileBanner__cta{ pointer-events:auto; }
+
+      .p5r-profileTitle{
+        margin: 0;
+        line-height: 1;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        user-select: none;
+        text-align: center;
+      }
+      .p5r-profileTitle__line{
+        display: block;
+        font-weight: 900;
+        font-size: clamp(24px, 3.2vw, 46px);
+        transform: skewX(-10deg);
+      }
+      .p5r-profileTitle__line--name{
+        margin-top: 10px;
+        font-size: clamp(32px, 4.2vw, 62px);
+      }
+
+      .p5r-jitterChar{
+        display:inline-block;
+        padding: .08em .16em;
+        margin: 0 .02em;
+        border: 2px solid rgba(0,0,0,.85);
+        box-shadow: 0 6px 18px rgba(0,0,0,.40);
+        transform-origin: 50% 65%;
+        will-change: transform;
+      }
+      .p5r-jitterChar.is-plain{
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        color: #fff;
+        text-shadow:
+          2px 2px 0 rgba(0,0,0,.85),
+          -2px 2px 0 rgba(0,0,0,.85),
+          2px -2px 0 rgba(0,0,0,.85),
+          -2px -2px 0 rgba(0,0,0,.85);
+      }
+      .p5r-jitterChar.is-wb{
+        background: #fff;
+        color: #06060a;
+      }
+      .p5r-jitterChar.is-bw{
+        background: #06060a;
+        color: #fff;
+      }
+      /* 表单标签用的小号字块 */
+      .p5r-jitterChar.p5r-jitterChar--mini{
+        padding: .06em .14em;
+        border-width: 1px;
+        box-shadow: 0 4px 12px rgba(0,0,0,.28);
+      }
+
+      @keyframes p5rBreathe{
+        0%,100%{ transform: translateZ(0) scale(1); }
+        50%{ transform: translateZ(0) scale(1.06); }
+      }
+      .p5r-breatheBtn{
+        animation: p5rBreathe 2.4s ease-in-out infinite;
+        box-shadow:
+          0 14px 40px rgba(0,0,0,.45),
+          0 0 0 1px rgba(255,255,255,.14) inset;
+      }
+
+      .p5r-about{
+        /* 与 My Work 同节奏：同宽度、同内边距 */
+        max-width: 944px;
+        margin: 0 auto;
+        padding: 26px clamp(16px, 2.2vw, 32px) 0;
+      }
+      .p5r-about__cap{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .p5r-about__capBox{
+        width: 6cm;
+        height: 14px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .24;
+      }
+      .p5r-about__capTitle{
+        margin: 0;
+        /* 字体样式与 .p5r-work__title 保持一致（直接复用同类） */
+      }
+      .p5r-about__inner{
+        display: grid;
+        grid-template-columns: 4cm 1fr;
+        align-items: center;
+        gap: 22px;
+        padding: 18px 18px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: linear-gradient(90deg, rgba(12,12,12,.96), rgba(245,245,245,.18));
+        box-shadow: 0 22px 70px rgba(0,0,0,.42);
+        position: relative;
+        overflow: hidden;
+      }
+      /* AboutMe：右侧 1cm 更偏白的红色条，贴右边对齐 */
+      .p5r-about__inner::after{
+        content:"";
+        position:absolute;
+        top:0;
+        right:0;
+        width: 1cm;
+        height: 100%;
+        background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+        pointer-events:none;
+      }
+      .p5r-about__avatarWrap{
+        width: 4cm;
+        height: 4cm;
+        border-radius: 999px;
+        border: 3px solid rgba(0,0,0,.85);
+        background: #fff;
+        box-shadow: 0 20px 55px rgba(0,0,0,.45);
+        overflow: hidden;
+        transform: rotate(-2deg);
+      }
+
+      /* 页尾：与 characters 页保持一致的深红页尾样式 */
+      body.p5r-characters[data-p5r-page="profile"] .p5r-pageFooter{
+        position: relative;
+        z-index: 1;
+        padding: 22px 16px 26px;
+        background: #2a050c;
+        border-top: 1px solid rgba(255, 255, 255, 0.10);
+        text-align: center;
+      }
+      body.p5r-characters[data-p5r-page="profile"] .p5r-pageFooter__inner{
+        margin: 0 auto;
+        max-width: 640px;
+      }
+      body.p5r-characters[data-p5r-page="profile"] .p5r-pageFooter__line{
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.7;
+        color: rgba(255, 245, 245, 0.9);
+      }
+      body.p5r-characters[data-p5r-page="profile"] .p5r-pageFooter a{
+        color: #ffc8d0;
+        text-decoration: underline;
+        word-break: break-all;
+      }
+      body.p5r-characters[data-p5r-page="profile"] .p5r-pageFooter a:hover{
+        color: #fff;
+      }
+      .p5r-about__avatar{
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.06);
+      }
+      .p5r-about__text{
+        min-height: 4cm;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .p5r-about__heading{ margin:0; }
+      .p5r-about__desc{
+        margin: 10px 0 0;
+        max-width: 72ch;
+        color: rgba(255,255,255,.92);
+        text-shadow: 0 2px 0 rgba(0,0,0,.55);
+      }
+
+      .p5r-work{
+        max-width: 944px;
+        margin: 0 auto;
+        padding: 26px clamp(16px, 2.2vw, 32px) 0;
+      }
+      .p5r-work__cap{
+        max-width: 944px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: clamp(16px, 2.2vw, 32px);
+        padding-right: clamp(16px, 2.2vw, 32px);
+        box-sizing: border-box;
+      }
+      /* 白色只包住“图片网格区域”，标题不包住 */
+      .p5r-workGrid{
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        background: #fff;
+        padding: 14px 14px;
+        border-radius: 18px;
+        box-shadow: 0 22px 70px rgba(0,0,0,.35);
+      }
+      .p5r-work__cap{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+      }
+      .p5r-work__capBox{
+        width: 6cm;
+        height: 14px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .24;
+      }
+      .p5r-work__title{
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: skewX(-10deg);
+      }
+      /*（上面已重写 .p5r-workGrid）*/
+      .p5r-workCard{
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.45);
+        box-shadow: 0 20px 60px rgba(0,0,0,.42);
+        aspect-ratio: 4 / 2;
+      }
+      .p5r-workCard__close{
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 3;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 2px solid rgba(255,255,255,.28);
+        background: rgba(0,0,0,.45);
+        color: #fff;
+        cursor: pointer;
+        line-height: 30px;
+        font-size: 20px;
+        font-weight: 900;
+        transform: skewX(-10deg);
+        box-shadow: 0 10px 22px rgba(0,0,0,.35);
+      }
+      .p5r-workCard__close:hover{
+        border-color: rgba(255,0,34,.85);
+        background: rgba(255,0,34,.18);
+      }
+      .p5r-workCard__close:focus{
+        outline: none;
+        box-shadow:
+          0 0 0 4px rgba(28,254,255,.20),
+          0 10px 22px rgba(0,0,0,.35);
+      }
+      .p5r-workCard__img{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit: cover;
+        border-radius: 16px;
+        transform: scale(1.01);
+        transition: transform .35s ease;
+        filter: contrast(1.02) saturate(1.02);
+      }
+      .p5r-workCard:hover .p5r-workCard__img{
+        transform: scale(1.06);
+      }
+      .p5r-workCard__mask{
+        position:absolute;
+        inset:0;
+        /* 仅做轻微暗角，不负责文字底条 */
+        background:
+          radial-gradient(900px 260px at 50% 100%, rgba(0,0,0,.22), transparent 60%);
+      }
+      .p5r-workCard__text{
+        position:absolute;
+        /* 遮罩条宽度与图片一致，底部完全对齐 */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* 遮罩条“上下厚度”约为原来的 0.8 倍 */
+        padding: 10px 12px;
+        border-radius: 0;
+        border-top: 3px solid rgba(255,255,255,.92);
+        background: rgba(0,0,0,.45);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        display:flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .p5r-workCard__name{
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        text-shadow:
+          2px 2px 0 rgba(0,0,0,.85),
+          -2px 2px 0 rgba(0,0,0,.85),
+          2px -2px 0 rgba(0,0,0,.85),
+          -2px -2px 0 rgba(0,0,0,.85);
+      }
+      .p5r-workCard__meta{
+        font-size: 12px;
+        opacity: .92;
+        text-shadow: 0 2px 0 rgba(0,0,0,.65);
+        white-space: nowrap;
+      }
+
+      /* AboutMe 保持左右分布：图片永远在左，文字永远在右 */
+
+      .p5r-touch{
+        max-width: 944px;
+        margin: 0 auto;
+        padding: 26px clamp(16px, 2.2vw, 32px) 0;
+      }
+      .p5r-touch__cap{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+      }
+      .p5r-touch__capBox{
+        width: 6cm;
+        height: 14px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .18;
+      }
+      .p5r-touch__title{
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: skewX(-10deg);
+      }
+      .p5r-touchForm{
+        margin-top: 14px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: linear-gradient(90deg, rgba(255,0,34,.18), rgba(255,0,34,.10));
+        box-shadow: 0 22px 70px rgba(0,0,0,.42);
+        padding: 16px 14px 14px;
+        /* 输入框有 skew，避免视觉上“探出”浅红区域 */
+        overflow: hidden;
+      }
+      .p5r-formFeedback{
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(0,0,0,.35);
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        transform: skewX(-6deg);
+      }
+      .p5r-formFeedback.is-error{
+        border-color: rgba(255,0,34,.65);
+        background: rgba(255,0,34,.12);
+      }
+      .p5r-formFeedback.is-ok{
+        border-color: rgba(28,254,255,.55);
+        background: rgba(28,254,255,.10);
+      }
+      .p5r-formGrid{
+        display:grid;
+        /* 每个字段各一行 */
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .p5r-field{
+        display:grid;
+        gap: 6px;
+        min-width: 0;
+      }
+      .p5r-field--full{
+        grid-column: 1 / -1;
+      }
+      .p5r-field__label{
+        font-size: 16px;
+        opacity: .92;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        line-height: 1.2;
+      }
+      .p5r-input{
+        width:100%;
+        box-sizing: border-box;
+        border-radius: 12px;
+        border: 2px solid rgba(255,255,255,.16);
+        background: rgba(0,0,0,.55);
+        color: #fff;
+        padding: 10px 10px;
+        outline: none;
+        transform: skewX(-6deg);
+      }
+      .p5r-input:focus{
+        border-color: rgba(28,254,255,.65);
+        box-shadow:
+          0 0 0 4px rgba(28,254,255,.22),
+          0 10px 26px rgba(0,0,0,.35);
+      }
+      .p5r-textarea{
+        resize: vertical;
+        min-height: 110px;
+        line-height: 1.5;
+        /* 建议框不要歪 */
+        transform: none;
+      }
+      .p5r-field__err{
+        min-height: 16px;
+        font-size: 12px;
+        color: rgba(255,0,34,.95);
+        text-shadow: 0 2px 0 rgba(0,0,0,.55);
+      }
+      .p5r-field.is-invalid .p5r-input{
+        border-color: rgba(255,0,34,.75);
+        box-shadow:
+          0 0 0 4px rgba(255,0,34,.22),
+          0 10px 26px rgba(0,0,0,.35);
+      }
+      .p5r-touchActions{
+        display:flex;
+        flex-wrap:wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .p5r-signPad{
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,.12);
+      }
+      .p5r-signPad__cap{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+      }
+      .p5r-signPad__capBox{
+        width: 4.2cm;
+        height: 12px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .14;
+      }
+      .p5r-signPad__title{
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: skewX(-10deg);
+        font-size: 14px;
+        opacity: .95;
+      }
+      .p5r-signPad__board{
+        margin-top: 10px;
+        border-radius: 14px;
+        border: 2px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.45);
+        box-shadow: 0 16px 48px rgba(0,0,0,.35);
+        overflow: hidden;
+      }
+      .p5r-signPad__canvas{
+        display:block;
+        width: 100%;
+        height: 220px;
+        touch-action: none;
+        cursor: crosshair;
+      }
+      .p5r-signPad__actions{
+        display:flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .p5r-signPad__color{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(0,0,0,.35);
+        border-radius: 999px;
+        box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      }
+      .p5r-signPad__colorText{
+        font-size: 12px;
+        letter-spacing: .08em;
+        color: rgba(255,255,255,.75);
+        user-select: none;
+        white-space: nowrap;
+      }
+      .p5r-signPad__colorInput{
+        width: 30px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .p5r-signPad__size{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(0,0,0,.35);
+        border-radius: 999px;
+        box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      }
+      .p5r-signPad__sizeText{
+        font-size: 12px;
+        letter-spacing: .08em;
+        color: rgba(255,255,255,.75);
+        user-select: none;
+        white-space: nowrap;
+      }
+      .p5r-signPad__sizeInput{
+        width: 120px;
+        accent-color: rgba(28,254,255,.9);
+      }
+      .p5r-signPad__sizeVal{
+        font-size: 12px;
+        letter-spacing: .06em;
+        color: rgba(255,255,255,.78);
+        min-width: 2.6em;
+        text-align: right;
+      }
+      .p5r-signPad__hint{
+        margin-top: 8px;
+        font-size: 12px;
+        letter-spacing: .06em;
+        color: rgba(255,255,255,.65);
+      }
+      @media (max-width: 520px){
+        .p5r-signPad__canvas{
+          height: 200px;
+        }
+      }
+
+      .p5r-miniGame{
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,.12);
+      }
+      .p5r-miniGame__cap{
+        display:flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .p5r-miniGame__capBox{
+        width: 4.2cm;
+        height: 12px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .14;
+      }
+      .p5r-miniGame__title{
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: skewX(-10deg);
+        font-size: 14px;
+        opacity: .95;
+      }
+      .p5r-miniGame__meta{
+        margin-left: auto;
+        font-size: 12px;
+        letter-spacing: .08em;
+        color: rgba(255,255,255,.78);
+        text-shadow: 0 2px 0 rgba(0,0,0,.55);
+      }
+      .p5r-miniGame__board{
+        margin-top: 10px;
+        border-radius: 14px;
+        border: 2px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.45);
+        box-shadow: 0 16px 48px rgba(0,0,0,.35);
+        overflow: hidden;
+      }
+      .p5r-miniGame__canvas{
+        display:block;
+        width: 100%;
+        height: 260px;
+        touch-action: none;
+        cursor: grab;
+      }
+      .p5r-miniGame__canvas:active{
+        cursor: grabbing;
+      }
+      .p5r-miniGame__actions{
+        display:flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .p5r-miniGame__hint{
+        margin-top: 8px;
+        font-size: 12px;
+        letter-spacing: .06em;
+        color: rgba(255,255,255,.65);
+      }
+      @media (max-width: 520px){
+        .p5r-miniGame__canvas{ height: 240px; }
+      }
+
+      .p5r-whatIDo{
+        max-width: 944px;
+        margin: 0 auto;
+        /* 整个 What I Do 模块上下高度调为当前的 0.8 倍 */
+        padding: 41.6px clamp(16px, 2.2vw, 32px) 41.6px;
+        overflow: visible;
+      }
+      .p5r-whatIDo__cap{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+      }
+      .p5r-whatIDo__capBox{
+        width: 6cm;
+        height: 14px;
+        background: rgba(255,255,255,.92);
+        transform: skewX(-24deg);
+        box-shadow: 0 12px 26px rgba(0,0,0,.35);
+        opacity: .18;
+      }
+      .p5r-whatIDo__title{
+        margin: 0;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: skewX(-10deg);
+      }
+      .p5r-whatIDoGrid{
+        margin-top: 14px;
+        display:grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        /* 与 My Work 一致：白色包裹卡片区域 */
+        background: #fff;
+        padding: 14px 14px;
+        border-radius: 18px;
+        box-shadow: 0 22px 70px rgba(0,0,0,.35);
+        overflow: visible;
+        position: relative;
+      }
+      .p5r-whatCard{
+        border: 1px solid rgba(255,255,255,.14);
+        background: #000;
+        box-shadow: 0 20px 60px rgba(0,0,0,.38);
+        border-radius: 16px;
+        overflow: visible;
+        /* 高度调为当前的 0.8 倍 */
+        aspect-ratio: 10 / 21.6;
+        display:flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+      }
+      .p5r-whatCard:hover{
+        /* 悬停卡片永远压过其他卡片 */
+        overflow: visible;
+        z-index: 30;
+      }
+      .p5r-whatCard__float{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: auto;
+        height: 100%;
+        max-width: none;
+        object-fit: contain;
+        border-radius: 16px;
+        transform: translate(-50%, -50%) scale(1.12);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 20;
+        filter: drop-shadow(0 18px 34px rgba(0,0,0,.28));
+      }
+      .p5r-whatCard:hover .p5r-whatCard__float{
+        opacity: 1;
+        animation: p5rWhatImgPop .32s cubic-bezier(.22,1.2,.32,1) 1 forwards;
+      }
+      .p5r-whatCard__clip{
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display:flex;
+        flex-direction: column;
+        border-radius: 16px;
+        overflow: hidden; /* 关键：圆角永远生效，卡片本体不变 */
+        background: #000;
+      }
+      .p5r-whatCard:hover .p5r-whatCard__clip{
+        /* 卡片本体始终保持圆角裁切，不再因为 hover 变方角 */
+        overflow: hidden;
+      }
+      @keyframes p5rWhatImgPop{
+        0%{
+          transform: translate(-50%, -50%) scale(1.12);
+        }
+        55%{
+          transform: translate(-50%, -50%) scale(1.18);
+        }
+        100%{
+          transform: translate(-50%, -50%) scale(1.14);
+        }
+      }
+      .p5r-whatCard__media{
+        /* 图片区域更大 */
+        flex: 1 1 85%;
+        position: relative;
+        background: #000;
+      }
+      .p5r-whatCard__media img{
+        position:absolute;
+        top: 50%;
+        left: 50%;
+        width:auto;
+        height:100%;
+        max-width: none;
+        object-fit: contain;
+        border-radius: 16px;
+        /* 默认就是较大但被裁切；hover 时原地完整露出 */
+        transform: translate(-50%, -50%) scale(1.12);
+        transform-origin: center center;
+        will-change: transform;
+        opacity: 1;
+      }
+      .p5r-whatCard:hover .p5r-whatCard__media img{
+        /* 悬停时隐藏卡片内部原图，只显示浮出层 */
+        opacity: 0;
+      }
+      .p5r-whatCard__body{
+        flex: 1 1 15%;
+        padding: 12px 12px 12px;
+        /* 文字区：黑底白字 */
+        background: #000;
+      }
+      .p5r-whatCard__name{
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow:
+          2px 2px 0 rgba(0,0,0,.85),
+          -2px 2px 0 rgba(0,0,0,.85),
+          2px -2px 0 rgba(0,0,0,.85),
+          -2px -2px 0 rgba(0,0,0,.85);
+      }
+      .p5r-whatCard__desc{
+        margin-top: 8px;
+        font-size: 12px;
+        opacity: 1;
+        color: rgba(255,255,255,.96);
+        line-height: 1.55;
+        text-shadow: 0 2px 0 rgba(0,0,0,.55);
+      }
+      @media (max-width: 980px){
+        .p5r-formGrid{ grid-template-columns: 1fr; }
+      }
+    </style>
+    <script>
+      (function () {
+        "use strict";
+
+        // Banner：3D 视差（随鼠标平移 + 轻微 rotateX/Y）
+        var banner = document.querySelector(".p5r-banner");
+        var bannerBg = banner && banner.querySelector(".p5r-banner__bg");
+        var reduceMotion =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (banner && bannerBg && !reduceMotion) {
+          var maxTranslate = 14;
+          var maxTilt = 5;
+          var parallaxIdle =
+            "translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1)";
+          function applyBannerParallax(e) {
+            var rect = banner.getBoundingClientRect();
+            var zoneTop = Math.max(0, rect.top);
+            var zoneBottom = rect.bottom;
+            if (zoneBottom <= 0 || zoneTop >= window.innerHeight) {
+              bannerBg.style.transform = parallaxIdle;
+              return;
+            }
+            if (e.clientY < zoneTop - 24 || e.clientY > zoneBottom + 48) {
+              bannerBg.style.transform = parallaxIdle;
+              return;
+            }
+            var cx = rect.left + rect.width / 2;
+            var zoneMidY = (zoneTop + zoneBottom) / 2;
+            var halfW = Math.max(1, rect.width / 2);
+            var halfH = Math.max(1, (zoneBottom - zoneTop) / 2);
+            var dx = (e.clientX - cx) / halfW;
+            var dy = (e.clientY - zoneMidY) / halfH;
+            dx = Math.max(-1, Math.min(1, dx));
+            dy = Math.max(-1, Math.min(1, dy));
+            var tx = -dx * maxTranslate;
+            var ty = -dy * maxTranslate;
+            var rx = dy * maxTilt;
+            var ry = -dx * maxTilt;
+            bannerBg.style.transform =
+              "translate3d(" +
+              tx +
+              "px," +
+              ty +
+              "px,0) rotateX(" +
+              rx +
+              "deg) rotateY(" +
+              ry +
+              "deg) scale(1.05)";
+          }
+          document.addEventListener("mousemove", applyBannerParallax);
+          window.addEventListener("blur", function () {
+            bannerBg.style.transform = parallaxIdle;
+          });
+        }
+
+        // 页眉：banner 还在视口里则透明；banner 完全滚上去后黑底
+        var headerBar = document.querySelector(".p5r-header");
+        var bannerEl = document.querySelector(".p5r-banner");
+        function syncHeaderBar() {
+          if (!headerBar) return;
+          if (!bannerEl) {
+            headerBar.classList.add("p5r-header--solid");
+            return;
+          }
+          var pastBanner = bannerEl.getBoundingClientRect().bottom <= 0;
+          headerBar.classList.toggle("p5r-header--solid", pastBanner);
+        }
+        window.addEventListener("scroll", syncHeaderBar, { passive: true });
+        syncHeaderBar();
+      })();
+    </script>
+    <script>
+      (function () {
+        function randBetween(a, b) {
+          return a + Math.random() * (b - a);
+        }
+        function pick(arr) {
+          return arr[(Math.random() * arr.length) | 0];
+        }
+        function buildJitterLine(el) {
+          if (!el) return;
+          var text = el.getAttribute("data-jitter-text") || "";
+          el.innerHTML = "";
+          var variants = ["is-wb", "is-bw", "is-plain"];
+          var isMini =
+            el.classList && el.classList.contains("p5r-field__label");
+          for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+            if (ch === "\n") {
+              el.appendChild(document.createElement("br"));
+              continue;
+            }
+            var span = document.createElement("span");
+            span.className =
+              "p5r-jitterChar " +
+              (isMini ? "p5r-jitterChar--mini " : "") +
+              pick(variants);
+            span.textContent = ch;
+            var rot = (Math.random() < 0.5 ? -1 : 1) * randBetween(2, 7);
+            span.style.transform = "rotate(" + rot.toFixed(1) + "deg)";
+            span.style.marginRight = ch === " " ? "0.22em" : "";
+            el.appendChild(span);
+          }
+        }
+        var lines = document.querySelectorAll("[data-jitter-text]");
+        for (var k = 0; k < lines.length; k++) buildJitterLine(lines[k]);
+      })();
+    </script>
+    <script>
+      (function () {
+        "use strict";
+
+        var form = document.getElementById("touchForm");
+        var feedback = document.getElementById("touchFeedback");
+        if (!form) return;
+
+        function $(sel, root) {
+          return (root || document).querySelector(sel);
+        }
+
+        function setFeedback(type, text) {
+          if (!feedback) return;
+          feedback.hidden = false;
+          feedback.classList.remove("is-error", "is-ok");
+          if (type) feedback.classList.add(type === "ok" ? "is-ok" : "is-error");
+          feedback.textContent = text || "";
+        }
+
+        function clearFeedback() {
+          if (!feedback) return;
+          feedback.hidden = true;
+          feedback.classList.remove("is-error", "is-ok");
+          feedback.textContent = "";
+        }
+
+        /** 仅高亮字段，与登录页一致：错误文案用底栏摩尔加纳 toast，不在输入框下展示 */
+        function setFieldInvalid(name, invalid) {
+          var field = form.querySelector('[name="' + name + '"]');
+          if (!field) return;
+          var wrap = field.closest(".p5r-field");
+          var err = $('[data-err-for="' + name + '"]', form);
+          if (wrap) wrap.classList.toggle("is-invalid", !!invalid);
+          if (err) err.textContent = "";
+        }
+
+        function showTouchValidationNoti(lines) {
+          var msg = lines.filter(Boolean).join("；");
+          if (!msg) return;
+          if (window.P5Proto && window.P5Proto.toastNoti) {
+            window.P5Proto.toastNoti(msg, {
+              title: "摩尔 加纳",
+              portrait: "mona",
+              ttl: 3800,
+              bottomQuarter: true
+            });
+          }
+        }
+
+        function clearAllErrors() {
+          var errs = form.querySelectorAll(".p5r-field__err");
+          for (var i = 0; i < errs.length; i++) errs[i].textContent = "";
+          var fields = form.querySelectorAll(".p5r-field.is-invalid");
+          for (var j = 0; j < fields.length; j++) fields[j].classList.remove("is-invalid");
+        }
+
+        function vName(s) {
+          s = String(s || "").trim();
+          if (!s) return "请输入姓名";
+          if (s.length < 2) return "姓名至少 2 个字符";
+          if (s.length > 24) return "姓名过长";
+          return "";
+        }
+
+        function vPhone(s) {
+          s = String(s || "").trim().replace(/\s+/g, "");
+          if (!s) return "请输入手机号";
+          if (!/^1\d{10}$/.test(s)) return "手机号格式不正确（需 11 位，以 1 开头）";
+          return "";
+        }
+
+        function vEmail(s) {
+          s = String(s || "").trim();
+          if (!s) return "请输入邮箱";
+          if (s.length > 80) return "邮箱过长";
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return "邮箱格式不正确";
+          return "";
+        }
+
+        function vSuggest(s) {
+          s = String(s || "").trim();
+          if (!s) return "";
+          if (s.length < 6) return "建议太短了（至少 6 个字）";
+          if (s.length > 500) return "建议过长（最多 500 字）";
+          return "";
+        }
+
+        function validate() {
+          clearAllErrors();
+          clearFeedback();
+
+          var name = form.elements.name && form.elements.name.value;
+          var phone = form.elements.phone && form.elements.phone.value;
+          var email = form.elements.email && form.elements.email.value;
+          var suggest = form.elements.suggest && form.elements.suggest.value;
+
+          var e1 = vName(name);
+          var e2 = vPhone(phone);
+          var e3 = vEmail(email);
+          var e4 = vSuggest(suggest);
+
+          var lines = [];
+          if (e1) {
+            lines.push(e1);
+            setFieldInvalid("name", true);
+          }
+          if (e2) {
+            lines.push(e2);
+            setFieldInvalid("phone", true);
+          }
+          if (e3) {
+            lines.push(e3);
+            setFieldInvalid("email", true);
+          }
+          if (e4) {
+            lines.push(e4);
+            setFieldInvalid("suggest", true);
+          }
+
+          var ok = !e1 && !e2 && !e3 && !e4;
+          if (!ok) {
+            clearFeedback();
+            showTouchValidationNoti(lines);
+          }
+          return ok;
+        }
+
+        function bindLive(name, fn) {
+          var el = form.elements[name];
+          if (!el) return;
+          el.addEventListener("input", function () {
+            setFieldInvalid(name, !!fn(el.value));
+          });
+          el.addEventListener("blur", function () {
+            setFieldInvalid(name, !!fn(el.value));
+          });
+        }
+
+        bindLive("name", vName);
+        bindLive("phone", vPhone);
+        bindLive("email", vEmail);
+        bindLive("suggest", vSuggest);
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (!validate()) {
+            var firstBad = form.querySelector(".p5r-field.is-invalid .p5r-input");
+            if (firstBad && firstBad.focus) firstBad.focus();
+            return;
+          }
+          setFeedback("ok", "已发送！我会尽快回复你。");
+          form.reset();
+          clearAllErrors();
+        });
+
+        form.addEventListener("reset", function () {
+          clearAllErrors();
+          clearFeedback();
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("p5rSignatureCanvas");
+        var btnClear = document.getElementById("p5rSignClear");
+        var btnSave = document.getElementById("p5rSignSave");
+        var colorEl = document.getElementById("p5rSignColor");
+        var sizeEl = document.getElementById("p5rSignSize");
+        var sizeValEl = document.getElementById("p5rSignSizeVal");
+        if (!canvas) return;
+
+        var ctx = canvas.getContext && canvas.getContext("2d");
+        if (!ctx) return;
+
+        var dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        var drawing = false;
+        var lastX = 0;
+        var lastY = 0;
+        var penColor = (colorEl && colorEl.value) || "#ffffff";
+        var penWidth = (sizeEl && parseFloat(sizeEl.value)) || 2.5;
+
+        function applyPenStyle() {
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = penColor;
+          ctx.lineWidth = Math.max(0.5, penWidth);
+        }
+
+        function cssPx(n) {
+          return Math.round(n * 100) / 100;
+        }
+
+        function resize() {
+          var rect = canvas.getBoundingClientRect();
+          var w = Math.max(1, Math.floor(rect.width));
+          var h = Math.max(1, Math.floor(rect.height));
+          var targetW = w * dpr;
+          var targetH = h * dpr;
+          if (canvas.width === targetW && canvas.height === targetH) return;
+
+          canvas.width = targetW;
+          canvas.height = targetH;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          applyPenStyle();
+
+          // 背景保持透明，但给一点“写字纸”的轻纹理感
+          ctx.clearRect(0, 0, cssPx(w), cssPx(h));
+        }
+
+        function getLocalPoint(e) {
+          var rect = canvas.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var y = e.clientY - rect.top;
+          return { x: x, y: y };
+        }
+
+        function start(e) {
+          resize();
+          drawing = true;
+          var p = getLocalPoint(e);
+          lastX = p.x;
+          lastY = p.y;
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+        }
+
+        function move(e) {
+          if (!drawing) return;
+          var p = getLocalPoint(e);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          lastX = p.x;
+          lastY = p.y;
+        }
+
+        function end(e) {
+          if (!drawing) return;
+          drawing = false;
+          ctx.closePath();
+          canvas.releasePointerCapture && canvas.releasePointerCapture(e.pointerId);
+        }
+
+        function clear() {
+          resize();
+          var rect = canvas.getBoundingClientRect();
+          ctx.clearRect(0, 0, rect.width, rect.height);
+        }
+
+        function save() {
+          resize();
+          var url = canvas.toDataURL("image/png");
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "signature.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+
+        // Pointer Events：同时覆盖 mouse/touch/pen
+        canvas.addEventListener("pointerdown", function (e) {
+          if (e.button != null && e.button !== 0) return;
+          start(e);
+        });
+        canvas.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", end);
+        window.addEventListener("pointercancel", end);
+        canvas.addEventListener("pointerleave", end);
+
+        // 按钮
+        if (btnClear) btnClear.addEventListener("click", clear);
+        if (btnSave) btnSave.addEventListener("click", save);
+        if (colorEl) {
+          colorEl.addEventListener("input", function () {
+            penColor = colorEl.value || "#ffffff";
+            applyPenStyle();
+          });
+        }
+        function syncSizeUi() {
+          if (sizeValEl) sizeValEl.textContent = String(penWidth);
+        }
+        if (sizeEl) {
+          syncSizeUi();
+          sizeEl.addEventListener("input", function () {
+            var v = parseFloat(sizeEl.value);
+            penWidth = isNaN(v) ? 2.5 : v;
+            syncSizeUi();
+            applyPenStyle();
+          });
+        }
+
+        // 表单 reset 时也顺便清空签名
+        var form = document.getElementById("touchForm");
+        if (form) form.addEventListener("reset", clear);
+
+        // 首次与尺寸变化时适配 DPR
+        resize();
+        window.addEventListener("resize", function () {
+          resize();
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        "use strict";
+
+        var canvas = document.getElementById("p5rMiniGameCanvas");
+        var meta = document.getElementById("p5rMiniGameMeta");
+        var btnStart = document.getElementById("p5rMiniGameStart");
+        var btnPause = document.getElementById("p5rMiniGamePause");
+        var btnReset = document.getElementById("p5rMiniGameReset");
+        if (!canvas) return;
+        var ctx = canvas.getContext && canvas.getContext("2d");
+        if (!ctx) return;
+
+        var storageKey = "p5r-miniGame-hi";
+        var hi = 0;
+        try {
+          hi = parseInt(localStorage.getItem(storageKey) || "0", 10) || 0;
+        } catch (e) {
+          hi = 0;
+        }
+
+        var dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        var w = 1;
+        var h = 1;
+
+        function resize() {
+          var r = canvas.getBoundingClientRect();
+          w = Math.max(1, Math.floor(r.width));
+          h = Math.max(1, Math.floor(r.height));
+          var tw = w * dpr;
+          var th = h * dpr;
+          if (canvas.width === tw && canvas.height === th) return;
+          canvas.width = tw;
+          canvas.height = th;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        var running = false;
+        var raf = 0;
+        var lastT = 0;
+        var score = 0;
+        var missed = 0;
+        var over = false;
+
+        var player = { x: 0.5, y: 0.86, w: 64, h: 14, vx: 0 };
+        var stars = [];
+        var spawnTimer = 0;
+
+        function rnd(a, b) {
+          return a + Math.random() * (b - a);
+        }
+
+        function clamp(v, a, b) {
+          return Math.max(a, Math.min(b, v));
+        }
+
+        function updateMeta() {
+          if (!meta) return;
+          meta.textContent = "分数：" + score + "　最高：" + hi + (over ? "　（结束）" : "");
+        }
+
+        function resetGame() {
+          score = 0;
+          missed = 0;
+          over = false;
+          stars = [];
+          spawnTimer = 0;
+          player.x = 0.5;
+          player.vx = 0;
+          updateMeta();
+          draw(0);
+        }
+
+        function spawnStar() {
+          var x = rnd(0.08, 0.92);
+          var r = rnd(6, 10);
+          var vy = rnd(90, 150) + Math.min(140, score * 2);
+          stars.push({ x: x, y: -0.05, r: r, vy: vy });
+        }
+
+        function drawStar(cx, cy, spikes, outerR, innerR, rot) {
+          var step = Math.PI / spikes;
+          ctx.beginPath();
+          for (var i = 0; i < spikes * 2; i++) {
+            var ang = rot + i * step;
+            var rr = i % 2 === 0 ? outerR : innerR;
+            ctx.lineTo(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr);
+          }
+          ctx.closePath();
+        }
+
+        function draw(t) {
+          resize();
+          ctx.clearRect(0, 0, w, h);
+
+          // 背景：暗红→黑的舞台感
+          var g = ctx.createLinearGradient(0, 0, 0, h);
+          g.addColorStop(0, "rgba(255,0,34,.12)");
+          g.addColorStop(0.45, "rgba(0,0,0,.35)");
+          g.addColorStop(1, "rgba(0,0,0,.72)");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+
+          // 地面线
+          ctx.strokeStyle = "rgba(255,255,255,.12)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(12, h * player.y + player.h + 12);
+          ctx.lineTo(w - 12, h * player.y + player.h + 12);
+          ctx.stroke();
+
+          // 玩家挡板
+          var px = w * player.x - player.w / 2;
+          var py = h * player.y;
+          var pg = ctx.createLinearGradient(px, py, px + player.w, py);
+          pg.addColorStop(0, "rgba(28,254,255,.35)");
+          pg.addColorStop(0.5, "rgba(255,255,255,.9)");
+          pg.addColorStop(1, "rgba(255,0,34,.35)");
+          ctx.fillStyle = "rgba(0,0,0,.35)";
+          ctx.fillRect(px, py, player.w, player.h);
+          ctx.fillStyle = pg;
+          ctx.fillRect(px, py + 3, player.w, 4);
+          ctx.strokeStyle = "rgba(255,255,255,.22)";
+          ctx.strokeRect(px + 0.5, py + 0.5, player.w - 1, player.h - 1);
+
+          // 星星
+          for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            var sx = w * s.x;
+            var sy = h * s.y;
+            var rot = (t / 1000) * 2.2 + i;
+            ctx.save();
+            ctx.translate(sx, sy);
+            drawStar(0, 0, 5, s.r, s.r * 0.5, rot);
+            ctx.fillStyle = "rgba(255, 220, 140, .92)";
+            ctx.shadowColor = "rgba(255, 200, 80, .35)";
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // 文案提示（未开始/结束）
+          if (!running && !over) {
+            ctx.fillStyle = "rgba(255,255,255,.78)";
+            ctx.font = "bold 14px system-ui, -apple-system, Segoe UI, Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("点击“开始/继续”或在画布上按下开始", w / 2, h / 2);
+          }
+          if (over) {
+            ctx.fillStyle = "rgba(255,255,255,.88)";
+            ctx.font = "900 16px system-ui, -apple-system, Segoe UI, Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("游戏结束（漏掉 3 个）", w / 2, h / 2 - 12);
+            ctx.font = "14px system-ui, -apple-system, Segoe UI, Arial";
+            ctx.fillText("点“重新开始”再来一局", w / 2, h / 2 + 12);
+          }
+
+          // 漏失显示（小）
+          ctx.fillStyle = "rgba(255,255,255,.6)";
+          ctx.font = "12px system-ui, -apple-system, Segoe UI, Arial";
+          ctx.textAlign = "left";
+          ctx.fillText("漏掉：" + missed + "/3", 12, 18);
+        }
+
+        function step(ts) {
+          if (!running) return;
+          if (!lastT) lastT = ts;
+          var dt = Math.min(0.04, (ts - lastT) / 1000);
+          lastT = ts;
+
+          // 生成节奏：分数越高越快
+          spawnTimer -= dt;
+          var spawnEvery = Math.max(0.38, 0.9 - score * 0.012);
+          if (spawnTimer <= 0) {
+            spawnTimer = spawnEvery;
+            spawnStar();
+          }
+
+          // 玩家键盘速度
+          if (player.vx) {
+            player.x = clamp(player.x + (player.vx * dt) / w, 0.08, 0.92);
+          }
+
+          // 更新星星
+          var px = w * player.x;
+          var py = h * player.y;
+          for (var i = stars.length - 1; i >= 0; i--) {
+            var s = stars[i];
+            s.y += (s.vy * dt) / h;
+            var sx = w * s.x;
+            var sy = h * s.y;
+            var hit =
+              sy >= py - 4 &&
+              sy <= py + player.h + 8 &&
+              Math.abs(sx - px) <= player.w * 0.52;
+            if (hit) {
+              stars.splice(i, 1);
+              score++;
+              if (score > hi) {
+                hi = score;
+                try {
+                  localStorage.setItem(storageKey, String(hi));
+                } catch (e) {}
+              }
+              updateMeta();
+              continue;
+            }
+            if (sy > h + 20) {
+              stars.splice(i, 1);
+              missed++;
+              if (missed >= 3) {
+                over = true;
+                running = false;
+                cancelAnimationFrame(raf);
+                raf = 0;
+              }
+              updateMeta();
+            }
+          }
+
+          draw(ts);
+          if (running) raf = requestAnimationFrame(step);
+        }
+
+        function start() {
+          if (over) return;
+          if (running) return;
+          running = true;
+          lastT = 0;
+          raf = requestAnimationFrame(step);
+          updateMeta();
+        }
+
+        function pause() {
+          if (!running) return;
+          running = false;
+          if (raf) cancelAnimationFrame(raf);
+          raf = 0;
+          draw(performance.now());
+        }
+
+        // 控制：指针拖动、键盘方向键
+        function setPlayerXByClientX(clientX) {
+          var r = canvas.getBoundingClientRect();
+          var x = (clientX - r.left) / Math.max(1, r.width);
+          player.x = clamp(x, 0.08, 0.92);
+        }
+
+        canvas.addEventListener("pointerdown", function (e) {
+          if (over) return;
+          setPlayerXByClientX(e.clientX);
+          start();
+          canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+        });
+        canvas.addEventListener("pointermove", function (e) {
+          if (over) return;
+          if (e.buttons) setPlayerXByClientX(e.clientX);
+        });
+        canvas.addEventListener("pointerup", function (e) {
+          canvas.releasePointerCapture && canvas.releasePointerCapture(e.pointerId);
+        });
+
+        window.addEventListener("keydown", function (e) {
+          if (over) return;
+          if (e.key === "ArrowLeft") player.vx = -360;
+          if (e.key === "ArrowRight") player.vx = 360;
+          if (e.key === " " || e.key === "Enter") start();
+        });
+        window.addEventListener("keyup", function (e) {
+          if (e.key === "ArrowLeft" && player.vx < 0) player.vx = 0;
+          if (e.key === "ArrowRight" && player.vx > 0) player.vx = 0;
+        });
+
+        if (btnStart) btnStart.addEventListener("click", start);
+        if (btnPause) btnPause.addEventListener("click", pause);
+        if (btnReset)
+          btnReset.addEventListener("click", function () {
+            pause();
+            resetGame();
+            updateMeta();
+          });
+
+        // 初始化
+        resetGame();
+        updateMeta();
+        window.addEventListener("resize", function () {
+          resize();
+          draw(performance.now());
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        "use strict";
+        var cards = document.querySelectorAll(".p5r-workCard");
+        for (var i = 0; i < cards.length; i++) {
+          (function (card) {
+            var btn = card.querySelector(".p5r-workCard__close");
+            if (!btn) return;
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              card.remove();
+            });
+          })(cards[i]);
+        }
+      })();
+    </script>
+  </body>
+</html>
+

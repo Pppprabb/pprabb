@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>任务详情｜P5R 原型</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../../player4/characters.css" />
+    <style>
+      /* Player4: 详情页本地化强化（不改 shared） */
+      .detail-page{
+        --d-red:#ff0022;
+        --d-cyan:#1cfeff;
+        background: #06070b;
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+      }
+      /* 委托板同款：固定背景（滚动不动） */
+      body.detail-page::after{
+        content:"";
+        position: fixed;
+        top:0; left:0; right:0; bottom:0;
+        z-index: 0;
+        background: url('../../../皇家p5r/雨宫莲/背景.png') no-repeat center center;
+        background-size: cover;
+        pointer-events: none;
+      }
+      body.detail-page::before{
+        content:"";
+        position: fixed;
+        top:0; left:0; right:0; bottom:0;
+        z-index: 1;
+        background: rgba(0,0,0,0.35);
+        pointer-events: none;
+      }
+      body.detail-page .layout,
+      body.detail-page .footer{
+        position: relative;
+        z-index: 5;
+      }
+      /* 委托板同款：固定页尾 */
+      body.detail-page .footer{
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+        text-align: center;
+        font-size: 0.9rem;
+        background: #000000;
+        color: #ffffff;
+        border-top: none;
+        box-shadow: 0 -4px 24px rgba(0,0,0,.45);
+      }
+      body.detail-page .footerRow{
+        margin:0;
+        font-size: 0.9rem;
+        opacity: 1;
+      }
+
+      /* 覆盖 shared 两栏：摘要固定浮层 + 正文让位 */
+      body.detail-page .layout{
+        display: block;
+      }
+      body.detail-page .detail-aside{
+        position: fixed;
+        left: 0;
+        top: calc(50% + var(--header-h)/2 - 2cm);
+        transform: translateY(-50%);
+        width: var(--detail-aside-lane);
+        min-width: 0;
+        max-width: none;
+        box-sizing: border-box;
+        height: calc(100vh - var(--header-h) - 52px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px 14px 24px;
+        overflow: visible;
+        border-right: none;
+        background: transparent;
+      }
+      body.detail-page .detail-main{
+        margin-left: var(--detail-aside-lane);
+        padding-left: 22px;
+        /* 右侧正文区域收窄到约 0.8 倍：主要靠右侧留白 */
+        box-sizing: border-box;
+        padding-right: calc(18px + 10vw);
+      }
+      .detail-page .main{
+        position:relative;
+      }
+      .detail-page .main::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        width:min(320px, 45%);
+        height:3px;
+        background:linear-gradient(90deg, var(--d-red), rgba(255,255,255,.8), transparent);
+        pointer-events:none;
+      }
+      .detail-page .detail-mainTitle{
+        margin-top:2px;
+      }
+      /* 主标题文字不加重影（对齐人物介绍页“主要角色”） */
+      .detail-page #detailMainTitleText{
+        font-size:56px;
+        font-weight:1000;
+        letter-spacing:.04em;
+        text-shadow: none;
+      }
+      /* 大标题：参考人物介绍页的 staggerTitle 格式 */
+      .detail-page .p5-title-ctn .p5r-staggerTitle__track{
+        font-size: inherit;
+        font-weight: inherit;
+        letter-spacing: inherit;
+      }
+      .detail-page .p5-title-ctn .p5r-staggerTitle__track > .p5r-staggerTitle__ch{
+        text-shadow: none;
+      }
+      .detail-page .detail-mainTitleSuffix{
+        font-size:56px;
+        font-weight:1000;
+        letter-spacing:.04em;
+        text-shadow:
+          -2px -2px 0 #000,
+          2px -2px 0 #000,
+          -2px 2px 0 #000,
+          2px 2px 0 #000,
+          0 4px 0 rgba(0,0,0,.55);
+      }
+
+      /* 模块内部背景：改为纯深红色（不透明） */
+      body.detail-page{
+        --detail-solidRed: #2a0008;
+        /* 左侧「行动摘要」整条区域 = 页面宽 3/16；内层卡片再占该区域的 3/4 */
+        --detail-aside-lane: calc(100vw * 3 / 16);
+      }
+      body.detail-page .section,
+      body.detail-page .detail-asideCard,
+      body.detail-page .detail-infoCell,
+      body.detail-page .detail-kvRow,
+      body.detail-page .detail-threat,
+      body.detail-page .detail-mapModal__panel{
+        background: var(--detail-solidRed) !important;
+      }
+      .detail-page .section{
+        border-radius:0;
+        border:1px solid rgba(255,255,255,.24);
+        background:
+          linear-gradient(130deg, rgba(255,255,255,.05), transparent 30%),
+          linear-gradient(320deg, rgba(255,0,34,.12), transparent 36%),
+          rgba(0,0,0,.42);
+        clip-path: polygon(0 0, 99% 0, 100% 12%, 100% 100%, 1.5% 100%, 0 92%);
+      }
+      .detail-page .detail-actionSection{
+        border-color:rgba(255,255,255,.34);
+        background:
+          linear-gradient(120deg, rgba(255,0,34,.18), transparent 35%),
+          linear-gradient(300deg, rgba(28,254,255,.14), transparent 36%),
+          rgba(0,0,0,.45);
+      }
+      .detail-page .detail-actionRow .p5-btn-ctn{
+        border:1px solid rgba(255,255,255,.34);
+        min-width:92px;
+      }
+      .detail-page #detailAccept:hover{
+        color:#000 !important;
+      }
+      /* 类型 / 区域标签与 MISSION SIGNAL：白底黑字 */
+      .detail-page .detail-actionRow .pill.pill--red,
+      .detail-page .detail-actionRow .pill.pill--cyan{
+        background:#fff !important;
+        color:#0a0a0a !important;
+        border:1px solid #0a0a0a !important;
+      }
+      .detail-page .detail-actionRow .detail-signal{
+        display:inline-block;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.06em;
+        padding:3px 10px;
+        border:1px solid #0a0a0a;
+        border-radius:999px;
+        background:#fff;
+        color:#0a0a0a;
+      }
+      .detail-page .detail-heroTile{
+        border:1px solid rgba(255,255,255,.25);
+        position:relative;
+        min-height:300px;
+        height:clamp(260px, 36vh, 360px);
+        overflow:hidden;
+        --hero-pos-x:50%;
+        --hero-pos-y:50%;
+        --hero-scale:1.02;
+        --hero-rotate:0deg;
+      }
+      .detail-page .detail-heroTile::before{
+        content:"";
+        position:absolute;
+        left:-30px;
+        top:-14px;
+        width:180px;
+        height:42px;
+        background:rgba(255,0,34,.78);
+        transform:skew(-20deg) rotate(-4deg);
+        z-index:2;
+        pointer-events:none;
+      }
+      .detail-page .detail-heroName{
+        position:absolute;
+        left:28px;
+        bottom:26px;
+        z-index:3;
+        pointer-events:none;
+        transform:skew(-10deg);
+      }
+      .detail-page .detail-heroNameMain{
+        display:inline-block;
+        font-size:34px;
+        font-weight:1000;
+        letter-spacing:.08em;
+        line-height:1;
+        color:#fff;
+        text-shadow:
+          -2px -2px 0 #000,
+          2px -2px 0 #000,
+          -2px 2px 0 #000,
+          2px 2px 0 #000,
+          0 4px 0 rgba(0,0,0,.55);
+      }
+      .detail-page .detail-heroNameSub{
+        margin-top:4px;
+        display:inline-block;
+        padding:2px 8px;
+        font-size:10px;
+        letter-spacing:.14em;
+        border:1px solid rgba(255,255,255,.5);
+        background:rgba(255,0,34,.55);
+        color:#fff;
+      }
+      .detail-page .detail-heroTile::after{
+        content:"";
+        position:absolute;
+        right:-14px;
+        bottom:10px;
+        width:150px;
+        height:30px;
+        background:rgba(28,254,255,.20);
+        transform:skew(-16deg) rotate(-6deg);
+        z-index:2;
+        pointer-events:none;
+      }
+      .detail-page .detail-heroImg{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        display:block;
+        object-fit:contain;
+        object-position: var(--hero-pos-x) var(--hero-pos-y);
+        transform:scale(var(--hero-scale)) rotate(var(--hero-rotate));
+        filter:contrast(1.12) saturate(1.16) brightness(.84);
+        background:linear-gradient(180deg, rgba(0,0,0,.38), rgba(0,0,0,.55));
+      }
+      .detail-page .detail-heroMask{
+        position:absolute;
+        inset:0;
+        z-index:1;
+        pointer-events:none;
+        background:
+          linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.60)),
+          linear-gradient(78deg, rgba(255,0,34,.22), transparent 34%),
+          linear-gradient(282deg, rgba(255,255,255,.08), transparent 30%),
+          repeating-linear-gradient(-35deg, rgba(255,255,255,.04) 0 8px, transparent 8px 16px),
+          linear-gradient(130deg, rgba(255,0,34,.22), transparent 36%),
+          linear-gradient(320deg, rgba(28,254,255,.16), transparent 34%);
+      }
+      @media (max-width: 860px){
+        .detail-page .detail-heroNameMain{ font-size:26px; }
+      }
+      .detail-page .detail-infoGrid{
+        margin-top:12px;
+        display:grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap:10px;
+      }
+      .detail-page .detail-infoCell{
+        position:relative;
+        display:flex;
+        flex-direction:column;
+        justify-content:flex-start;
+        gap:4px;
+        min-height:92px;
+        padding:10px 12px;
+        border:1px solid rgba(255,255,255,.2);
+        border-color: rgba(255,255,255,.28);
+        clip-path: polygon(0 0, 97% 0, 100% 18%, 100% 100%, 3% 100%, 0 86%);
+        background:
+          linear-gradient(100deg, rgba(255,255,255,.09), transparent 30%),
+          linear-gradient(280deg, rgba(255,0,34,.14), transparent 34%),
+          rgba(0,0,0,.52);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+        overflow:hidden;
+      }
+      .detail-page .detail-infoCell::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        width:46%;
+        height:3px;
+        background:linear-gradient(90deg, var(--d-red), rgba(255,255,255,.85), transparent);
+      }
+      .detail-page .detail-infoCell b{
+        text-shadow:
+          -1px -1px 0 #000,
+          1px -1px 0 #000,
+          -1px 1px 0 #000,
+          1px 1px 0 #000,
+          0 3px 0 rgba(0,0,0,.5);
+        font-size:30px;
+        line-height:1.05;
+        letter-spacing:.02em;
+      }
+      .detail-page .detail-infoCell span{
+        font-size:11px;
+        letter-spacing:.12em;
+        text-transform:uppercase;
+        opacity:.88;
+      }
+      .detail-page #detailStatus{
+        color:#fff;
+      }
+      .detail-page #detailStatus::before{
+        content:"● ";
+        color:var(--d-cyan);
+        font-size:.9em;
+      }
+      .detail-page #detailRisk{
+        color:#fff;
+      }
+      .detail-page #detailRisk::after{
+        content:"  !!";
+        color:var(--d-red);
+        font-size:.65em;
+        vertical-align:top;
+      }
+      .detail-clientCell{
+        position:relative;
+        overflow:hidden;
+      }
+      .detail-clientCell #detailClient{
+        position:relative;
+        z-index:2;
+      }
+      .detail-clientSilhouette{
+        position:absolute;
+        right:8px;
+        bottom:-12px;
+        width:118px;
+        height:118px;
+        object-fit:cover;
+        opacity:1;
+        filter: grayscale(1) contrast(2.9) brightness(.16);
+        mix-blend-mode:screen;
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,.16),
+          0 0 36px rgba(0,0,0,.68),
+          0 0 22px rgba(255,0,34,.22);
+        pointer-events:none;
+        z-index:1;
+      }
+      .detail-page .detail-bodySection{
+        border-color: rgba(255,255,255,.28);
+      }
+      .detail-page .detail-bodyText{
+        border-left:4px solid rgba(28,254,255,.82);
+        padding-left:14px;
+      }
+      .detail-page .detail-asideCard{
+        width: 75%;
+        max-width: 100%;
+        box-sizing: border-box;
+        border-radius:0;
+        border-color: rgba(255,255,255,.30);
+        background:
+          linear-gradient(120deg, rgba(255,0,34,.16), transparent 38%),
+          linear-gradient(300deg, rgba(28,254,255,.12), transparent 40%),
+          rgba(0,0,0,.55);
+      }
+      .detail-page .detail-kvList{
+        margin-top:10px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+      }
+      .detail-page .detail-kvRow{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        padding:8px 10px;
+        border:1px solid rgba(255,255,255,.18);
+        background:rgba(0,0,0,.36);
+        border-color: rgba(255,255,255,.24);
+        clip-path: polygon(0 0, 97% 0, 100% 22%, 100% 100%, 4% 100%, 0 86%);
+      }
+      .detail-page .detail-kvRow > span{
+        font-size:11px;
+        letter-spacing:.12em;
+        opacity:.86;
+        text-transform:uppercase;
+      }
+      .detail-page .detail-kvRow > b{
+        font-size:18px;
+        font-weight:1000;
+        letter-spacing:.04em;
+      }
+      .detail-page .detail-threat{
+        margin-top:12px;
+        padding:10px 10px 12px;
+        border:1px solid rgba(255,255,255,.2);
+        background:
+          linear-gradient(100deg, rgba(255,0,34,.16), transparent 38%),
+          rgba(0,0,0,.42);
+        clip-path: polygon(0 0, 98% 0, 100% 18%, 100% 100%, 3% 100%, 0 86%);
+      }
+      .detail-page .detail-threat__label{
+        font-size:11px;
+        letter-spacing:.12em;
+        opacity:.86;
+      }
+      .detail-page .detail-threat__meta{
+        margin-top:6px;
+        font-size:11px;
+        letter-spacing:.06em;
+        opacity:.88;
+      }
+      .detail-page .detail-threat__bar{
+        margin-top:8px;
+        height:10px;
+        border:1px solid rgba(255,255,255,.2);
+        background:rgba(0,0,0,.5);
+        border-color: rgba(255,255,255,.26);
+        position:relative;
+        overflow:hidden;
+      }
+      .detail-page .detail-threat__bar > i{
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        display:block;
+        background:linear-gradient(90deg, #ff0022, #ff4360);
+      }
+      .detail-infoCell--map{
+        grid-column:auto;
+        min-height:88px;
+        padding:10px 12px;
+      }
+      .detail-page .detail-infoCell--wide{
+        display:none;
+      }
+      .detail-mapInCell{
+        margin-top:4px;
+        position:relative;
+        height:52px;
+        border:1px solid rgba(255,255,255,.34);
+        overflow:hidden;
+        clip-path: polygon(0 0, 99% 0, 100% 14%, 100% 100%, 2% 100%, 0 88%);
+        background:#111;
+      }
+      .detail-mapInCell img,
+      .detail-mapInCell .detail-mapFish{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+      }
+      .detail-mapInCell .detail-mapFish{
+        clip-path: circle(0 at 0 0);
+        transform:scale(1.18);
+        transform-origin:50% 50%;
+        filter:contrast(1.06) saturate(1.12);
+        pointer-events:none;
+      }
+      .detail-mapTarget{
+        position:absolute;
+        width:14px;
+        height:14px;
+        border-radius:999px;
+        border:2px solid #fff;
+        background:var(--d-red);
+        transform:translate(-50%, -50%);
+        box-shadow:0 0 0 3px rgba(0,0,0,.45), 0 0 16px rgba(255,0,34,.85);
+        animation: mapPulse 1.1s ease-in-out infinite;
+      }
+      .detail-mapLabel{
+        position:absolute;
+        left:8px;
+        bottom:6px;
+        padding:2px 8px;
+        font-size:10px;
+        letter-spacing:.08em;
+        border:1px solid rgba(255,255,255,.5);
+        background:rgba(0,0,0,.62);
+        color:#fff;
+        transform:skew(-10deg);
+        text-shadow:0 1px 2px rgba(0,0,0,.85);
+      }
+      .detail-mapLabel.detail-mapLabel--top{
+        top:6px;
+        bottom:auto;
+      }
+      .detail-mapLabel.detail-mapLabel--right{
+        left:auto;
+        right:8px;
+      }
+      .detail-mapModal{
+        position:fixed;
+        inset:0;
+        z-index:120;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,.72);
+        backdrop-filter: blur(2px);
+      }
+      .detail-mapModal.is-open{
+        display:flex;
+      }
+      .detail-mapModal__panel{
+        width:min(92vw, 1100px);
+        height:min(78vh, 620px);
+        border:1px solid rgba(255,255,255,.36);
+        background:rgba(0,0,0,.55);
+        clip-path: polygon(0 0, 99% 0, 100% 10%, 100% 100%, 1% 100%, 0 90%);
+        position:relative;
+        overflow:hidden;
+      }
+      .detail-mapModal__close{
+        position:absolute;
+        top:10px;
+        right:12px;
+        z-index:3;
+      }
+      .detail-mapModal__inner{
+        position:absolute;
+        inset:0;
+        height:100%;
+        clip-path:none;
+        border:none;
+        margin:0;
+      }
+      .detail-mapModal__inner img,
+      .detail-mapModal__inner .detail-mapFish{
+        object-fit:contain;
+        background:#08090d;
+      }
+      .detail-mapLens{
+        position:absolute;
+        width:82px;
+        height:82px;
+        border-radius:999px;
+        border:2px solid rgba(255,255,255,.9);
+        transform:translate(-50%, -50%);
+        box-shadow:0 0 0 3px rgba(0,0,0,.55) inset, 0 0 24px rgba(255,255,255,.35);
+        pointer-events:none;
+      }
+      .detail-mapLens::before{
+        content:"";
+        position:absolute;
+        inset:-10px;
+        border-radius:999px;
+        border:2px dashed rgba(255,255,255,.55);
+        animation: mapSpin 4s linear infinite;
+      }
+      #detailLocation{
+        display:none;
+      }
+      @media (max-width: 980px){
+        .detail-page .detail-infoGrid{
+          grid-template-columns:1fr;
+        }
+        .detail-page .detail-infoCell--wide{
+          grid-column:auto;
+        }
+      }
+      @keyframes mapPulse{
+        0%,100%{ transform:scale(1); }
+        50%{ transform:scale(1.2); }
+      }
+      @keyframes mapSpin{
+        from{ transform:rotate(0deg); }
+        to{ transform:rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body class="site show-plain detail-page">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img class="p5r-logo" src="../../../shared/p5ui/assets/src-assets/logo.png" alt="logo" />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="./requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="./my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo" href="../../player1/pages/bulletins.html">公告</a>
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="aside detail-aside">
+        <div class="card detail-asideCard">
+          <h3 class="p5-title-ctn"><span id="detailAsideTitle">行动摘要</span></h3>
+          <div class="detail-kvList">
+            <div class="detail-kvRow"><span>ID</span><b id="detailIdSide">T??</b></div>
+            <div class="detail-kvRow"><span>类型</span><b id="detailAsideType">委托</b></div>
+            <div class="detail-kvRow"><span>状态</span><b id="detailAsideState">待处理</b></div>
+          </div>
+          <div class="detail-threat">
+            <div class="detail-threat__label">威胁评估</div>
+            <div class="detail-threat__bar"><i style="width:68%"></i></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main detail-main">
+        <h1 class="p5-title-ctn detail-mainTitle">
+          <span id="detailMainTitleText">任务详情</span><span class="detail-mainTitleSuffix">：<span id="detailId">T??</span></span>
+        </h1>
+        <div class="section detail-actionSection">
+          <div class="row detail-actionRow">
+            <span id="detailPill1" class="pill pill--red">委托</span>
+            <span id="detailPill2" class="pill pill--cyan">区域</span>
+            <span class="detail-signal">MISSION SIGNAL LOCKED</span>
+            <span class="spacer"></span>
+            <button id="detailAccept" class="p5-btn-ctn p5-hover-animation-mix taskAcceptBtn" type="button">接取</button>
+            <button id="detailComplete" class="p5-btn-ctn p5-hover-animation-gray" type="button">完成</button>
+            <button id="detailAbandon" class="p5-btn-ctn p5-hover-animation-gray" type="button">放弃</button>
+            <button class="p5-btn-ctn p5-hover-animation-gray" type="button" onclick="P5Proto.toastNoti('已收藏（原型）')">收藏</button>
+            <button class="p5-btn-ctn p5-hover-animation-gray" type="button" onclick="history.back()">返回</button>
+          </div>
+        </div>
+
+        <div class="section detail-heroSection">
+          <h2 class="p5-title-ctn"><span id="detailHeroCap">主视觉</span></h2>
+          <div class="tile detail-heroTile">
+            <img id="detailHero" alt="" class="detail-heroImg" hidden />
+            <div class="detail-heroName" aria-hidden="true">
+              <div class="detail-heroNameMain" id="detailHeroNameMain">怪盗团</div>
+              <div class="detail-heroNameSub" id="detailHeroNameSub">PHANTOM PROFILE</div>
+            </div>
+            <div class="detail-heroMask">
+              <div class="detail-heroTag">PHANTOM CHANNEL</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section detail-infoSection">
+          <h2 class="p5-title-ctn"><span id="detailInfoTitle">信息表</span></h2>
+          <div class="detail-infoGrid">
+            <div class="detail-infoCell detail-infoCell--map">
+              <span>地点地图</span>
+              <div class="detail-mapInCell" id="detailMapInCell">
+                <img id="detailMapImg" src="./p5r-map.png" alt="地图" />
+                <img class="detail-mapFish" id="detailMapFish" src="./p5r-map.png" alt="" />
+                <i class="detail-mapLens" id="detailMapLens" hidden></i>
+                <i class="detail-mapTarget" id="detailMapTarget" hidden></i>
+              <div class="detail-mapLabel" id="detailMapLabel">目标地点：—</div>
+              </div>
+              <b id="detailLocation">—</b>
+            </div>
+            <div class="detail-infoCell"><span>时间窗</span><b id="detailTime">—</b></div>
+            <div class="detail-infoCell"><span>难度</span><b id="detailLevel">—</b></div>
+            <div class="detail-infoCell"><span>状态</span><b id="detailStatus">—</b></div>
+            <div class="detail-infoCell detail-clientCell"><span>委托人</span><b id="detailClient">—</b><img id="detailClientSilhouette" class="detail-clientSilhouette" alt="" /></div>
+            <div class="detail-infoCell"><span>风险</span><b id="detailRisk">—</b></div>
+            <div class="detail-infoCell detail-infoCell--wide"><span>报酬（占位）</span><b id="detailReward">—</b></div>
+          </div>
+        </div>
+
+        <div class="section detail-bodySection">
+          <h2 class="p5-title-ctn"><span id="detailBodyTitle">详情正文</span></h2>
+          <div id="detailBody" class="muted detail-bodyText">
+            <p>若未加载任务目录，将只显示占位说明。请从委托板进入或保证已引入 requests-data.js。</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="footerRow">Phantom Thieves</div>
+    </footer>
+    <div class="detail-mapModal" id="detailMapModal" aria-hidden="true">
+      <div class="detail-mapModal__panel" role="dialog" aria-modal="true" aria-label="地点地图放大">
+        <button type="button" class="p5-btn-ctn p5-hover-animation-gray detail-mapModal__close" id="detailMapModalClose">关闭</button>
+        <div class="detail-mapModal__inner detail-mapInCell" id="detailMapModalInner">
+          <img src="./p5r-map.png" alt="地图放大" />
+          <img class="detail-mapFish" id="detailMapModalFish" src="./p5r-map.png" alt="" />
+          <i class="detail-mapLens" id="detailMapModalLens" hidden></i>
+          <i class="detail-mapTarget" id="detailMapModalTarget" hidden></i>
+          <div class="detail-mapLabel" id="detailMapModalLabel">目标地点：—</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../player3/pages/requests-data.js"></script>
+    <script src="../../shared/site.js"></script>
+    <script>
+      (function () {
+        var KEY_MY = "p5_proto_my_missions";
+        var qs = new URLSearchParams(location.search);
+        var id = qs.get("id") || "T??";
+
+        function byId(x) { return document.getElementById(x); }
+        function renderStaggerTitle(el, text) {
+          if (!el) return;
+          var t = String(text == null ? "" : text);
+          el.innerHTML = "";
+          var track = document.createElement("span");
+          track.className = "p5r-staggerTitle__track";
+          for (var i = 0; i < t.length; i++) {
+            var ch = document.createElement("span");
+            ch.className = "p5r-staggerTitle__ch" + (i === 1 ? " p5r-staggerTitle__ch--invert" : "");
+            ch.textContent = t[i];
+            track.appendChild(ch);
+          }
+          el.appendChild(track);
+        }
+        function findTaskById(taskId) {
+          var cat = Array.isArray(window.P5_TASK_CATALOG) ? window.P5_TASK_CATALOG : [];
+          for (var i = 0; i < cat.length; i++) {
+            if (cat[i] && cat[i].id === taskId) return cat[i];
+          }
+          return null;
+        }
+        function readState() {
+          try {
+            var raw = JSON.parse(localStorage.getItem(KEY_MY) || "{}") || {};
+            return {
+              accepted: Array.isArray(raw.accepted) ? raw.accepted : [],
+              completed: Array.isArray(raw.completed) ? raw.completed : [],
+              abandoned: Array.isArray(raw.abandoned) ? raw.abandoned : []
+            };
+          } catch (e) {
+            return { accepted: [], completed: [], abandoned: [] };
+          }
+        }
+        function writeState(s) {
+          localStorage.setItem(KEY_MY, JSON.stringify(s));
+        }
+        function idxById(arr, taskId) {
+          for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].id === taskId) return i;
+          return -1;
+        }
+        function tip(msg) {
+          if (window.P5Proto && typeof window.P5Proto.toastNoti === "function") window.P5Proto.toastNoti(msg);
+          else alert(msg);
+        }
+        function snapshot(task) {
+          return {
+            id: task.id,
+            title: task.title,
+            tag: task.tag,
+            level: task.level,
+            district: task.district,
+            timeWindow: task.timeWindow,
+            summary: task.summary,
+            cover: task.cover,
+            client: task.client,
+            risk: task.risk,
+            reward: task.reward,
+            statusLabel: task.statusLabel,
+            body: task.body
+          };
+        }
+        function levelToGrade(level) {
+          var stars = (String(level || "").match(/★/g) || []).length;
+          if (stars >= 4) return "A";
+          if (stars === 3) return "B";
+          if (stars === 2) return "C";
+          return "D";
+        }
+        function clientToPortraitKey(client) {
+          var text = String(client || "");
+          if (text.indexOf("摩尔加纳") >= 0) return "mona";
+          if (text.indexOf("双叶") >= 0) return "futaba";
+          if (text.indexOf("高卷杏") >= 0) return "ann";
+          if (text.indexOf("祐介") >= 0) return "yusuke";
+          if (text.indexOf("新岛真") >= 0) return "makoto";
+          if (text.indexOf("龙司") >= 0) return "ryuji";
+          if (text.indexOf("奥村春") >= 0) return "haru";
+          if (text.indexOf("明智") >= 0) return "akechi";
+          if (text.indexOf("芳泽") >= 0 || text.indexOf("霞") >= 0) return "sumire";
+          return "mona";
+        }
+        function heroPresetByClient(client) {
+          var key = clientToPortraitKey(client || "");
+          var presets = {
+            mona:   { x:"52%", y:"52%", s:"1.00", r:"0deg" },
+            futaba: { x:"52%", y:"50%", s:"1.02", r:"0deg" },
+            ann:    { x:"50%", y:"50%", s:"1.01", r:"0deg" },
+            yusuke: { x:"52%", y:"50%", s:"1.01", r:"0deg" },
+            makoto: { x:"50%", y:"50%", s:"1.02", r:"0deg" },
+            ryuji:  { x:"50%", y:"52%", s:"1.00", r:"0deg" },
+            haru:   { x:"50%", y:"50%", s:"1.02", r:"0deg" },
+            akechi: { x:"50%", y:"50%", s:"1.01", r:"0deg" },
+            sumire: { x:"52%", y:"50%", s:"1.02", r:"0deg" }
+          };
+          return presets[key] || { x:"50%", y:"50%", s:"1.02", r:"0deg" };
+        }
+
+        var task = findTaskById(id);
+        byId("detailId").textContent = id;
+        byId("detailIdSide").textContent = id;
+        if (!task) {
+          var bodyFallback = byId("detailBody");
+          if (bodyFallback) bodyFallback.innerHTML = "<p>未找到该任务数据，请从委托板重新进入。</p>";
+          return;
+        }
+
+        byId("detailPill1").textContent = task.tag || "委托";
+        byId("detailPill2").textContent = task.district || "区域";
+        byId("detailAsideType").textContent = task.tag || "委托";
+        byId("detailAsideState").textContent = task.statusLabel || "待处理";
+        byId("detailLocation").textContent = task.district || "—";
+        byId("detailTime").textContent = task.timeWindow || "—";
+        byId("detailLevel").textContent = levelToGrade(task.level || "");
+        byId("detailStatus").textContent = task.statusLabel || "待处理";
+        byId("detailClient").textContent = task.client || "—";
+        var silhouette = byId("detailClientSilhouette");
+        if (silhouette) {
+          var key = clientToPortraitKey(task.client || "");
+          silhouette.src = "../../../shared/p5ui/assets/src-assets/images/portraits/" + key + ".png";
+        }
+        byId("detailRisk").textContent = task.risk || "—";
+        byId("detailReward").textContent = task.reward || "—";
+        byId("detailHeroCap").textContent = task.title || "主视觉";
+        byId("detailHeroNameMain").textContent = task.client || "怪盗团";
+
+        /* 大标题样式：参考人物介绍页（第 2 字反白） */
+        renderStaggerTitle(byId("detailAsideTitle"), "行动摘要");
+        renderStaggerTitle(byId("detailMainTitleText"), "任务详情");
+        renderStaggerTitle(byId("detailHeroCap"), byId("detailHeroCap") ? byId("detailHeroCap").textContent : "主视觉");
+        renderStaggerTitle(byId("detailInfoTitle"), "信息表");
+        renderStaggerTitle(byId("detailBodyTitle"), "详情正文");
+
+        function applyMapFocus(fish, lens, target, label, district, radiusPx) {
+          if (!fish || !lens || !target) return;
+          var points = {
+            "吉祥寺":[7,34],
+            "涩谷":[22,54],
+            "四轩茶屋":[19,58],
+            "新宿":[31,34],
+            "秀尽学园":[38,46],
+            "霞关":[57,42],
+            "秋叶原":[71,33],
+            "神田":[74,40],
+            "六本木":[55,58],
+            "目黑":[42,62],
+            "台场":[78,69],
+            "异世界":[51,24],
+            "全线":[58,52]
+          };
+          var p = points[district] || points["全线"];
+          var x = p[0];
+          var y = p[1];
+          lens.hidden = false;
+          target.hidden = false;
+          lens.style.left = x + "%";
+          lens.style.top = y + "%";
+          target.style.left = x + "%";
+          target.style.top = y + "%";
+          fish.style.transformOrigin = x + "% " + y + "%";
+          fish.style.clipPath = "circle(" + radiusPx + "px at " + x + "% " + y + "%)";
+          if (label) {
+            label.textContent = "目标地点：" + (district || "全线");
+            label.classList.remove("detail-mapLabel--top", "detail-mapLabel--right");
+            if (x >= 56) {
+              label.classList.add("detail-mapLabel--top");
+            } else if (x <= 34) {
+              label.classList.add("detail-mapLabel--top", "detail-mapLabel--right");
+            }
+          }
+        }
+        function focusMapByDistrict(district) {
+          applyMapFocus(
+            byId("detailMapFish"),
+            byId("detailMapLens"),
+            byId("detailMapTarget"),
+            byId("detailMapLabel"),
+            district,
+            41
+          );
+          applyMapFocus(
+            byId("detailMapModalFish"),
+            byId("detailMapModalLens"),
+            byId("detailMapModalTarget"),
+            byId("detailMapModalLabel"),
+            district,
+            96
+          );
+        }
+        focusMapByDistrict(task.district || "");
+
+        var modal = byId("detailMapModal");
+        var openMap = byId("detailMapInCell");
+        var closeMap = byId("detailMapModalClose");
+        function openModal() {
+          if (!modal) return;
+          modal.classList.add("is-open");
+          modal.setAttribute("aria-hidden", "false");
+        }
+        function closeModal() {
+          if (!modal) return;
+          modal.classList.remove("is-open");
+          modal.setAttribute("aria-hidden", "true");
+        }
+        if (openMap) openMap.addEventListener("click", openModal);
+        if (closeMap) closeMap.addEventListener("click", closeModal);
+        if (modal) {
+          modal.addEventListener("click", function (e) {
+            if (e.target === modal) closeModal();
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeModal();
+          });
+        }
+
+        var hero = byId("detailHero");
+        if (hero) {
+          if (task.cover) {
+            hero.src = task.cover;
+            hero.hidden = false;
+            var preset = heroPresetByClient(task.client || "");
+            var tile = hero.closest(".detail-heroTile");
+            if (tile) {
+              tile.style.setProperty("--hero-pos-x", preset.x);
+              tile.style.setProperty("--hero-pos-y", preset.y);
+              tile.style.setProperty("--hero-scale", preset.s);
+              tile.style.setProperty("--hero-rotate", preset.r);
+            }
+          } else {
+            hero.hidden = true;
+          }
+        }
+
+        var detailBody = byId("detailBody");
+        if (detailBody) {
+          var paras = Array.isArray(task.body) && task.body.length ? task.body : [task.summary || "暂无说明。"];
+          detailBody.innerHTML = paras.map(function (p) {
+            return "<p>" + String(p).replace(/</g, "&lt;") + "</p>";
+          }).join("");
+        }
+
+        byId("detailAccept").onclick = function () {
+          var st = readState();
+          if (idxById(st.accepted, id) >= 0) return tip("已在已接取列表");
+          if (idxById(st.completed, id) >= 0) return tip("该任务已完成");
+          var ab = idxById(st.abandoned, id);
+          if (ab >= 0) st.abandoned.splice(ab, 1);
+          st.accepted.push(snapshot(task));
+          writeState(st);
+          tip("已接取：" + (task.title || id));
+        };
+        byId("detailComplete").onclick = function () {
+          var st = readState();
+          var ix = idxById(st.accepted, id);
+          if (ix < 0) return tip("该任务不在已接取列表");
+          var row = st.accepted.splice(ix, 1)[0];
+          row.completedAt = Date.now();
+          st.completed.unshift(row);
+          writeState(st);
+          tip("已完成：" + (row.title || id));
+        };
+        byId("detailAbandon").onclick = function () {
+          var st = readState();
+          var ix = idxById(st.accepted, id);
+          if (ix < 0) return tip("仅能从已接取列表放弃");
+          var row = st.accepted.splice(ix, 1)[0];
+          row.abandonedAt = Date.now();
+          st.abandoned.unshift(row);
+          writeState(st);
+          tip("已放弃：" + (row.title || id));
+        };
+      })();
+    </script>
+  </body>
+</html>

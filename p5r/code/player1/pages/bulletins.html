@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>怪盗公告 · 心之殿堂</title>
+  <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css">
+  <link rel="stylesheet" href="../../shared/site.css">
+  <link rel="stylesheet" href="../../player4/characters.css">
+  <style>
+    /* ========== 黑色基调 · 红黑点缀 ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body.p5r-characters[data-p5r-page="bulletins"] {
+      background-color: #0b0b0f;
+      color: #f0eae1;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      /* 固定页脚占位，避免滚动时正文被遮住 */
+      padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* 全屏固定底层：滚动页面时背景图不跟随移动（优于仅 attachment:fixed，兼容更多浏览器） */
+    body.p5r-characters[data-p5r-page="bulletins"]::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 0;
+      background: url('../../../皇家p5r/雨宫莲/背景.png') no-repeat center center;
+      background-size: cover;
+      pointer-events: none;
+    }
+
+    body.p5r-characters[data-p5r-page="bulletins"]::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 头部 */
+    .site-header {
+      background: rgba(4, 2, 2, 0.98);
+      border-bottom: 2px solid #a22;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 20;
+      backdrop-filter: blur(4px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      background: #140606;
+      color: #e0c0c0;
+      padding: 4px 10px;
+      font-weight: 900;
+      font-family: 'Anton', sans-serif;
+      letter-spacing: 2px;
+      transform: skewX(-8deg);
+      box-shadow: 2px 2px 0 #2a0505;
+      border: 1px solid #a22;
+    }
+
+    .brandTitle {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #ddd;
+      text-shadow: 2px 2px 0 #500;
+      letter-spacing: 2px;
+    }
+
+    /* 按钮基础样式 — 仅作用于版心内，避免覆盖顶栏 .p5-btn-ctn（与人物/联系页顶栏一致） */
+    .layout .p5-btn-ctn {
+      background: rgba(15, 6, 6, 0.98);
+      border: 2px solid #822;
+      color: #d4c0c0;
+      padding: 8px 18px;
+      margin: 0 4px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 3px 3px 0 #1f0303;
+      transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      transform: skewX(-6deg);
+      display: inline-block;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .layout .p5-btn-ctn span {
+      display: inline-block;
+      transform: skewX(6deg);
+    }
+
+    /* 悬停效果：仅改变背景/颜色/阴影，不做位移，避免抖动超出 */
+    .layout .p5-btn-ctn:hover {
+      background: #3a2a2a !important;
+      color: #fff0e0 !important;
+      border-color: #b66 !important;
+      box-shadow: 2px 2px 0 #1f0303, 0 0 8px #a44 !important;
+    }
+
+    /* 布局 — 增加整体左右留白；flex:1 把页脚推到底部（短页面时也贴视口下沿） */
+    /* 顶栏/页尾不动：仅在版心整体上缘留出 1cm，正文整体下移 */
+    .layout {
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+      position: relative;
+      z-index: 5;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1cm 20px 0;
+      width: 100%;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Rajdhani', 'Noto Sans SC', sans-serif;
+    }
+
+    /* 顶栏：与其它 p5r 页面同一套字体栈（不受版心 font-family 影响） */
+    body.p5r-characters[data-p5r-page="bulletins"] .p5r-header {
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, 'PingFang SC', 'Microsoft YaHei',
+        sans-serif;
+    }
+
+    /* 左侧边栏 — 宽度变窄，无滚动条；整块「操作 / 筛选」下移 2cm */
+    .aside {
+      width: 200px;
+      padding: calc(24px + 2cm) 12px 24px;
+      background: rgba(5, 2, 2, 0.9);
+      border-right: 1px solid #622;
+      backdrop-filter: blur(4px);
+      flex-shrink: 0;
+      overflow: visible;
+    }
+    /* 侧栏标题：不要额外的黑色底块 */
+    .aside .p5-title-ctn,
+    .aside .p5-title-ctn span{
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    .aside .p5-title-ctn span{
+      padding: 0 !important;
+    }
+
+    .main {
+      flex: 1;
+      padding: 24px 0 24px 24px;
+      backdrop-filter: blur(2px);
+      min-width: 0;
+    }
+
+    /* 发布预告：仅替换主栏下方「搜索+列表」区块，其它布局不变 */
+    .main.main--publish #bulletinSection {
+      display: none;
+    }
+    .main.main--publish .flip-container {
+      display: block;
+      margin-top: 1cm;
+      margin-bottom: 20px;
+    }
+
+    /* 卡片板块 */
+    .section {
+      background: rgba(6, 3, 3, 0.95);
+      border: 2px solid #722;
+      box-shadow: 6px 6px 0 #140202, inset 0 0 15px rgba(80,0,0,0.2);
+      padding: 22px;
+      backdrop-filter: blur(3px);
+      clip-path: polygon(0% 0%, 98% 0%, 100% 3%, 100% 97%, 97% 100%, 2% 100%, 0% 98%, 0% 2%);
+    }
+
+    /* 公告列表区块：与上方工具区之间预留 1cm */
+    #bulletinSection {
+      margin-top: 1cm;
+    }
+
+    /* ---------- 倾斜标题 ---------- */
+    .title-skew {
+      display: flex;
+      align-items: center;
+      gap: 0px;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .skew-char {
+      display: inline-block;
+      font-family: 'Anton', 'Impact', 'Noto Sans SC', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #e8ddd5;
+      text-shadow: 3px 3px 0 #500, 1px 1px 0 #200;
+      letter-spacing: -2px;
+    }
+    .char1 { transform: rotate(-5deg) translateY(2px); }
+    .char2 { transform: rotate(3deg) translateY(-4px); }
+    .char3 { transform: rotate(-7deg) translateY(6px); }
+    .char4 { 
+      transform: rotate(4deg) translateY(-2px); 
+      position: relative;
+      color: black;
+      text-shadow: none;
+      z-index: 3;
+    }
+    .char4::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 1.3em;
+      height: 1.3em;
+      background: #f0f0f0;
+      transform: translate(-50%, -50%) rotate(45deg);
+      z-index: -1;
+      box-shadow: 0 0 8px #c44, 0 0 0 2px #822;
+      border: 1px solid black;
+    }
+
+    /* 未读计数 — 靠标题行右侧对齐 */
+    #unreadCount {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: #2a1010;
+      color: #faa;
+      padding: 4px 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: 1px solid #a44;
+      transform: skewX(-6deg);
+      box-shadow: 2px 2px 0 #1a0303;
+    }
+    #unreadCount.hide {
+      display: none;
+    }
+
+    /* 工具栏 */
+    .action-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .p5-action-btn {
+      background: rgba(15, 5, 5, 0.98);
+      border: 2px solid #833;
+      color: #e0c0c0;
+      padding: 10px 26px;
+      font-family: 'Anton', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      box-shadow: 4px 4px 0 #1f0303;
+      cursor: pointer;
+      transform: skewX(-8deg);
+      transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .p5-action-btn span { 
+      transform: skewX(8deg); 
+      display: inline-block; 
+    }
+    .p5-action-btn:hover {
+      background: #3a2a2a !important;
+      color: #fff0e0 !important;
+      border-color: #b66 !important;
+      box-shadow: 2px 2px 0 #1f0303, 0 0 10px #b44 !important;
+    }
+
+    .p5-action-btn.p5-action-btn--active {
+      background: #5a1a1a;
+      border-color: #c66;
+      color: #fff;
+      box-shadow: 3px 3px 0 #1f0303, 0 0 12px rgba(180, 60, 60, 0.35);
+    }
+
+    /* 公告卡片 */
+    .bulletin {
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      border-radius: 0px;
+      background: rgba(12, 6, 6, 0.98);
+      border-left: 5px solid #833;
+      border-right: 1px solid #522;
+      border-bottom: 1px solid #411;
+      transition: all 0.15s;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 4px 4px 0 #120202;
+      clip-path: polygon(0% 0%, 100% 0%, 98% 92%, 100% 100%, 0% 100%);
+    }
+    /* 未读：红色强调 */
+    .bulletin.unread {
+      border-left-color: #d32f2f;
+      border-right-color: rgba(180, 40, 45, 0.35);
+      border-bottom-color: rgba(90, 20, 22, 0.75);
+      background: rgba(26, 8, 10, 0.96);
+      box-shadow: 4px 4px 0 #140808, 0 0 8px rgba(200, 45, 50, 0.28);
+    }
+    .bulletin.unread .pill {
+      background: rgba(48, 10, 12, 0.95);
+      color: #f0b8bc;
+      border-color: #b33;
+    }
+    .bulletin.unread .bulletin-content {
+      color: #e8c8c8;
+    }
+    .bulletin.unread .unread-badge {
+      width: 10px;
+      height: 10px;
+      background: #c62828;
+      display: inline-block;
+      margin-right: 8px;
+      transform: rotate(45deg);
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    /* 已读：绿色强调 */
+    .bulletin.read {
+      border-left-color: #2d8f5e;
+      border-right-color: rgba(45, 143, 94, 0.35);
+      border-bottom-color: rgba(20, 60, 40, 0.65);
+      background: rgba(8, 26, 18, 0.94);
+      box-shadow: 4px 4px 0 #0a1810, 0 0 6px rgba(45, 143, 94, 0.22);
+    }
+    .bulletin.read .pill {
+      background: rgba(12, 42, 28, 0.95);
+      color: #b8e8c8;
+      border-color: #3d9a6a;
+    }
+    .bulletin.read .bulletin-content {
+      color: #c5e6d0;
+    }
+    .bulletin:hover {
+      background: rgba(20, 10, 10, 1);
+      box-shadow: 6px 6px 0 #140202;
+      transform: translate(-2px, -2px);
+    }
+    .bulletin.unread:hover {
+      background: rgba(42, 12, 14, 0.98);
+      box-shadow: 6px 6px 0 #180a0a, 0 0 12px rgba(200, 45, 50, 0.35);
+    }
+    .bulletin.read:hover {
+      background: rgba(12, 36, 24, 0.98);
+      box-shadow: 6px 6px 0 #0c2118, 0 0 10px rgba(45, 143, 94, 0.28);
+    }
+
+    /* 删除按钮 — 默认始终显示 */
+    .bulletin .delete-icon {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: #1a0606;
+      border: 2px solid #a22;
+      color: #faa;
+      font-size: 1.3rem;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.95;
+      transition: 0.1s;
+      z-index: 10;
+      transform: skewX(-6deg);
+      box-shadow: 2px 2px 0 #300;
+    }
+    .bulletin .delete-icon:hover {
+      background: #a22;
+      color: white;
+      border-color: #fcc;
+      transform: skewX(-6deg) scale(1.08);
+    }
+
+    /* 翻转卡片 — 发布预告区：纵向约 1.5×，内容区略加宽 */
+    .flip-container {
+      perspective: 1500px;
+      margin: 10px 0 20px;
+      display: none;
+      width: 100%;
+      max-width: min(920px, 100%);
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .flipper {
+      position: relative;
+      width: 100%;
+      min-height: 540px;
+      transition: 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flip-front, .flip-back {
+      backface-visibility: hidden;
+      background: rgba(4, 2, 2, 0.98);
+      border: 2px solid #933;
+      box-shadow: 6px 6px 0 #1a0303;
+      padding: 30px 32px;
+      clip-path: polygon(0% 0%, 98% 0%, 100% 3%, 100% 97%, 96% 100%, 2% 100%, 0% 97%);
+    }
+    .flip-front { transform: rotateY(0deg); }
+    .flip-back {
+      transform: rotateY(180deg);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .flipped { transform: rotateY(180deg); }
+
+    .flip-container .form-group { margin-bottom: 27px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; color: #dbb; font-weight: bold; margin-bottom: 6px; }
+    .flip-container textarea.p5-input {
+      min-height: 9em;
+    }
+    .p5-input {
+      width: 100%;
+      background: rgba(18, 8, 8, 0.98);
+      border: 2px solid #744;
+      color: #fff;
+      padding: 12px 16px;
+      box-shadow: inset 2px 2px 8px black;
+    }
+    .category-select { display: flex; gap: 15px; }
+    .cat-option {
+      background: rgba(20, 8, 8, 0.98);
+      border: 2px solid #633;
+      padding: 6px 16px;
+      cursor: pointer;
+      transform: skewX(-5deg);
+      color: #ddd;
+      transition: background 0.2s;
+    }
+    .cat-option.selected { background: #733; border-color: #c66; color: white; }
+    .cat-option:hover { background: #3a2a2a; color: #fff; }
+
+    .history-item { padding: 10px; border-bottom: 1px solid #633; color: #ecc; }
+
+    /* 模态弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.2s;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-content {
+      background: url('../../../皇家p5r/雨宫莲/排版人物框.png') no-repeat center center;
+      background-size: 100% 100%;
+      border: none;
+      outline: none;
+      box-shadow: 12px 12px 0 #1f0303;
+      padding: 30px 30px 30px 30px;
+      width: 700px;
+      max-width: 90vw;
+      min-height: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      transform: rotate(-0.8deg) translateY(20px);
+      transition: transform 0.2s;
+      clip-path: polygon(0% 0%, 97% 0%, 100% 4%, 100% 96%, 95% 100%, 3% 100%, 0% 97%);
+      color: #fff;
+      text-align: center;
+    }
+    .modal-overlay.active .modal-content { transform: rotate(-0.8deg) translateY(0); }
+    
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: 2px solid #a33;
+      color: #faa;
+      font-size: 1.8rem;
+      line-height: 1;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transform: skewX(-6deg);
+      box-shadow: 2px 2px 0 #300;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      z-index: 10;
+    }
+    .modal-close:hover {
+      background: #3a2a2a;
+      color: white;
+      border-color: #fcc;
+    }
+
+    .modal-title-container {
+      margin-bottom: 20px;
+      min-height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .modal-title-skew {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+    }
+    .modal-skew-char {
+      font-family: 'Anton', 'Impact', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #f0e0d0;
+      text-shadow: 3px 3px 0 #600;
+      display: inline-block;
+      position: relative;
+    }
+    .modal-skew-char.last-char {
+      color: black;
+      text-shadow: none;
+      z-index: 3;
+    }
+    .modal-skew-char.last-char::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 1.2em;
+      height: 1.2em;
+      background: #fff;
+      transform: translate(-50%, -50%) rotate(45deg);
+      z-index: -1;
+      box-shadow: 0 0 8px #f66, 0 0 0 2px #a22;
+      border: 1px solid black;
+    }
+
+    .modal-time { color: #f0d0d0; margin: 8px 0 16px; font-size: 1.1rem; }
+    .modal-category {
+      display: inline-block;
+      padding: 4px 16px;
+      background: #311;
+      border: 1px solid #a44;
+      margin-bottom: 16px;
+    }
+    .modal-body {
+      line-height: 1.8;
+      font-size: 1.1rem;
+      color: #f8f0e8;
+      text-align: center;
+      padding: 0 10px;
+      text-shadow: 1px 1px 2px black;
+    }
+
+    /* 筛选下拉 — 窄边栏内全宽 */
+    .aside .filter-select {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px 28px 10px 12px;
+      border: 2px solid #633;
+      border-radius: 0;
+      background-color: rgba(12, 5, 5, 0.98);
+      background-image: linear-gradient(45deg, transparent 50%, #b66 50%), linear-gradient(135deg, #b66 50%, transparent 50%);
+      background-position: calc(100% - 16px) calc(50% + 2px), calc(100% - 11px) calc(50% + 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      color: #e0c0c0;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      box-sizing: border-box;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .aside .filter-select:hover,
+    .aside .filter-select:focus {
+      background-color: #3a2a2a;
+      color: #fff0e0;
+      border-color: #b66;
+      outline: none;
+    }
+    .aside .filter-select option {
+      background: #1a0a0a;
+      color: #e8e0e0;
+    }
+
+    .search-box {
+      background: rgba(18, 8, 8, 0.98);
+      border: 2px solid #744; 
+      color: white;
+      padding: 12px 16px; 
+      width: 100%; 
+      margin-bottom: 20px;
+    }
+
+    .pill { padding: 4px 10px; background: #2a1515; color: #ecc; border: 1px solid #a55; }
+
+    .footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      margin: 0;
+      text-align: center;
+      font-size: 0.9rem;
+      background: #000000;
+      color: #ffffff;
+      border-top: none;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+    }
+    /* 覆盖 shared/site.css 对 .footerRow 的缩小字号，保持与页尾一致 */
+    body.p5r-characters[data-p5r-page="bulletins"] .footer .footerRow{
+      font-size: 0.9rem;
+      opacity: 1;
+      margin: 0;
+    }
+
+    /* 响应式 */
+    @media (max-width: 900px) {
+      .layout { padding: 1cm 10px 0; }
+      .aside { width: 170px; }
+    }
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; padding: 1cm 0 0; }
+      .aside { width: auto; border-right: none; border-bottom: 1px solid #622; }
+      .main { padding: 20px; }
+    }
+  </style>
+</head>
+<body class="p5r-characters" data-p5r-page="bulletins">
+  <header class="p5r-header" role="banner">
+    <div class="p5r-header__left">
+      <img
+        class="p5r-logo"
+        src="../../../shared/p5ui/assets/src-assets/logo.png"
+        alt="logo"
+      />
+    </div>
+
+    <div class="p5r-header__right">
+      <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+        <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+          <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+            <span class="p5r-headerNav__summaryText">委托</span>
+            <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+          </summary>
+          <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+          </div>
+        </details>
+        <a
+          class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo is-current"
+          href="./bulletins.html"
+          aria-current="page"
+          >公告</a
+        >
+        <details class="p5r-headerNav" id="p5rHeaderContactNav">
+          <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+            <span class="p5r-headerNav__summaryText">联系</span>
+            <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+          </summary>
+          <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+          </div>
+        </details>
+        <details class="p5r-headerNav" id="p5rHeaderNav">
+          <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+            <span class="p5r-headerNav__summaryText">人物</span>
+            <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+          </summary>
+          <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+            <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+          </div>
+        </details>
+      </nav>
+      <div class="p5r-headerUser" data-p5r-header-user>
+        <div class="p5r-profileEntryWrap">
+          <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+          <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+            <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+          </div>
+        </div>
+        <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="aside">
+      <h3 class="p5-title-ctn"><span>操作</span></h3>
+      <button id="clearRead" class="p5-btn-ctn" style="width:100%; margin-bottom:8px;">清空未读</button>
+      <button id="markAllUnread" class="p5-btn-ctn" style="width:100%;">全部标为未读</button>
+      <h4 style="margin-top:28px; color:#dbb;">筛选</h4>
+      <select id="filterSelect" class="filter-select" aria-label="按分类筛选公告">
+        <option value="all" selected>全部</option>
+        <option value="system">系统</option>
+        <option value="request">委托</option>
+        <option value="info">情报</option>
+      </select>
+    </aside>
+
+    <main class="main">
+      <div class="title-skew">
+        <span class="skew-char char1">公</span>
+        <span class="skew-char char2">告</span>
+        <span class="skew-char char3">列</span>
+        <span class="skew-char char4">表</span>
+        <div id="unreadCount">3条未读</div>
+      </div>
+
+      <div class="action-toolbar">
+        <button type="button" class="p5-action-btn p5-action-btn--active" id="btnHistoryBulletins"><span>历史公告</span></button>
+        <button type="button" class="p5-action-btn" id="showPublishPanel"><span>发布预告</span></button>
+        <span style="color:#b99; margin-left:auto; font-style:italic;">—— 心之怪盗团</span>
+      </div>
+
+      <div class="flip-container" id="flipContainer">
+        <div class="flipper" id="flipper">
+          <div class="flip-front">
+            <h3 style="color:#fcc; border-left:6px solid #a44; padding-left:12px;">撰写新公告</h3>
+            <div class="form-group"><label>标题</label><input type="text" id="newTitle" class="p5-input" placeholder="例：殿堂潜入通知"></div>
+            <div class="form-group">
+              <label>分类</label>
+              <div class="category-select" id="categorySelect">
+                <span class="cat-option selected" data-cat="system">系统</span>
+                <span class="cat-option" data-cat="request">委托</span>
+                <span class="cat-option" data-cat="info">情报</span>
+              </div>
+            </div>
+            <div class="form-group"><label>内容</label><textarea id="newContent" class="p5-input" rows="7"></textarea></div>
+            <div class="flip-controls" style="display:flex; gap:12px; margin-top:16px;">
+              <button class="p5-btn-ctn" id="publishSubmit"><span>发布</span></button>
+              <button class="p5-btn-ctn" id="flipToHistory"><span>历史</span></button>
+            </div>
+          </div>
+          <div class="flip-back">
+            <h3>最近发布</h3>
+            <div id="historyList" style="margin:15px 0;"><div class="history-item">暂无历史</div></div>
+            <div style="display:flex; gap:12px;">
+              <button class="p5-btn-ctn" id="flipBackToForm"><span>返回</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="bulletinSection">
+        <input type="text" class="search-box" placeholder="搜索公告…" id="searchInput">
+        <div id="bulletinList" class="bulletins"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="bulletinModal">
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <div class="modal-title-container" id="modalTitleContainer"></div>
+      <div class="modal-time" id="modalTime"></div>
+      <span class="modal-category" id="modalCategory"></span>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footerRow">Phantom Thieves</div>
+  </footer>
+
+  <script src="../../shared/site.js"></script>
+  <script>
+    (function(){
+      let bulletinsData = [
+        { id: 'B01', title: '行动时间窗', time: '今天 09:30', category: 'system', content: '今晚21:00在卢布朗咖啡厅集合，请准时参加。', read: false },
+        { id: 'B02', title: '新委托上线', time: '昨天 14:15', category: 'request', content: '新的委托已发布：调查四轩茶屋的异常现象。', read: false, requestId: 'R001' },
+        { id: 'B03', title: '频道规则更新', time: '2026/04/12', category: 'info', content: '提交情报前请确认字段完整。新增来源可信度评级。', read: false },
+        { id: 'B04', title: '服务器维护', time: '2026/04/10', category: 'system', content: '4月11日凌晨维护。', read: true }
+      ];
+      let publishHistory = [];
+
+      const bulletinListEl = document.getElementById('bulletinList');
+      const unreadCountEl = document.getElementById('unreadCount');
+      const modal = document.getElementById('bulletinModal');
+      const modalTitleContainer = document.getElementById('modalTitleContainer');
+      const modalTime = document.getElementById('modalTime');
+      const modalCategory = document.getElementById('modalCategory');
+      const modalBody = document.getElementById('modalBody');
+      let currentBulletin = null;
+
+      function renderSkewTitle(text) {
+        if (!text) return '';
+        const chars = text.split('');
+        let html = '<div class="modal-title-skew">';
+        chars.forEach((char, index) => {
+          const isLast = index === chars.length - 1;
+          const rotation = (index % 3 === 0) ? -4 : (index % 3 === 1) ? 3 : -2;
+          const yShift = index % 2 === 0 ? 2 : -2;
+          const style = `transform: rotate(${rotation}deg) translateY(${yShift}px);`;
+          const lastClass = isLast ? 'last-char' : '';
+          html += `<span class="modal-skew-char ${lastClass}" style="${style}">${char}</span>`;
+        });
+        html += '</div>';
+        return html;
+      }
+
+      function render(filterCat = 'all', searchTerm = '') {
+        const filtered = bulletinsData.filter(b => {
+          if (filterCat !== 'all' && b.category !== filterCat) return false;
+          if (searchTerm && !(b.title+b.content).toLowerCase().includes(searchTerm.toLowerCase())) return false;
+          return true;
+        });
+        let html = '';
+        filtered.forEach(b => {
+          const readClass = b.read ? 'read' : 'unread';
+          const catName = {system:'系统',request:'委托',info:'情报'}[b.category];
+          html += `<div class="bulletin ${readClass}" data-id="${b.id}" data-category="${b.category}" data-request-id="${b.requestId || ''}">
+            <button type="button" class="delete-icon" data-id="${b.id}" aria-label="删除这条公告">×</button>
+            <div class="bulletin-header">
+              ${!b.read ? '<span class="unread-badge" aria-hidden="true"></span>' : ''}
+              <span class="bulletin-title">${escapeHtml(b.title)}</span>
+              <div class="bulletin-meta"><span class="bulletin-time">${b.time}</span><span class="pill">${catName}</span></div>
+            </div>
+            <div class="bulletin-content">${escapeHtml(b.content)}</div>
+          </div>`;
+        });
+        bulletinListEl.innerHTML = html || '<div style="padding:20px;text-align:center;color:#b99;">暂无公告</div>';
+        updateUnreadDisplay();
+        attachEvents();
+      }
+
+      function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+      
+      function updateUnreadDisplay() {
+        const unread = bulletinsData.filter(b => !b.read).length;
+        unreadCountEl.textContent = `${unread}条未读`;
+        unreadCountEl.classList.toggle('hide', unread === 0);
+      }
+
+      function attachEvents() {
+        document.querySelectorAll('.bulletin').forEach(el => {
+          el.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-icon')) return;
+            const id = this.dataset.id;
+            const b = bulletinsData.find(b => b.id === id);
+            if (!b) return;
+            if (!b.read) { b.read = true; render(getCurrentFilter(), getSearchTerm()); }
+            currentBulletin = b;
+            modalTitleContainer.innerHTML = renderSkewTitle(b.title);
+            modalTime.textContent = b.time;
+            modalCategory.textContent = {system:'系统',request:'委托',info:'情报'}[b.category];
+            modalBody.textContent = b.content;
+            modal.classList.add('active');
+          });
+        });
+        document.querySelectorAll('.bulletin .delete-icon').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = this.getAttribute('data-id');
+            bulletinsData = bulletinsData.filter(b => b.id !== id);
+            render(getCurrentFilter(), getSearchTerm());
+          });
+        });
+      }
+
+      function getCurrentFilter() {
+        const sel = document.getElementById('filterSelect');
+        return sel && sel.value ? sel.value : 'all';
+      }
+      function getSearchTerm() { return document.getElementById('searchInput').value; }
+
+      render();
+
+      document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => modal.classList.remove('active')));
+      modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('active'); });
+
+      document.getElementById('filterSelect').addEventListener('change', function () {
+        render(this.value, getSearchTerm());
+      });
+      document.getElementById('searchInput').addEventListener('input', e => render(getCurrentFilter(), e.target.value));
+
+      document.getElementById('clearRead').addEventListener('click', () => { bulletinsData.forEach(b => b.read = true); render(getCurrentFilter(), getSearchTerm()); });
+      document.getElementById('markAllUnread').addEventListener('click', () => { bulletinsData.forEach(b => b.read = false); render(getCurrentFilter(), getSearchTerm()); });
+
+      const flipContainer = document.getElementById('flipContainer');
+      const flipper = document.getElementById('flipper');
+      const btnHistoryBulletins = document.getElementById('btnHistoryBulletins');
+      const btnPublishPanel = document.getElementById('showPublishPanel');
+      const mainEl = document.querySelector('main.main');
+
+      function setMainView(mode) {
+        var historyActive = mode === 'history';
+        btnHistoryBulletins.classList.toggle('p5-action-btn--active', historyActive);
+        btnPublishPanel.classList.toggle('p5-action-btn--active', !historyActive);
+        if (mainEl) mainEl.classList.toggle('main--publish', !historyActive);
+        flipper.classList.remove('flipped');
+      }
+
+      btnHistoryBulletins.addEventListener('click', function () { setMainView('history'); });
+      btnPublishPanel.addEventListener('click', function () { setMainView('publish'); });
+
+      document.getElementById('flipToHistory').addEventListener('click', () => {
+        updateHistoryList();
+        flipper.classList.add('flipped');
+      });
+      document.getElementById('flipBackToForm').addEventListener('click', () => flipper.classList.remove('flipped'));
+      
+      let selectedCat = 'system';
+      document.querySelectorAll('.cat-option').forEach(opt => opt.addEventListener('click', function() {
+        document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedCat = this.dataset.cat;
+      }));
+
+      function updateHistoryList() {
+        const container = document.getElementById('historyList');
+        container.innerHTML = publishHistory.length ? publishHistory.slice(-5).reverse().map(h => 
+          `<div class="history-item"><strong>${escapeHtml(h.title)}</strong> (${h.cat})<br><small>${h.time}</small></div>`
+        ).join('') : '<div class="history-item">暂无历史</div>';
+      }
+
+      document.getElementById('publishSubmit').addEventListener('click', () => {
+        const title = document.getElementById('newTitle').value.trim();
+        const content = document.getElementById('newContent').value.trim();
+        if (!title || !content) return alert('请填写完整');
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const newId = 'B' + Date.now();
+        const newB = { id: newId, title, time: timeStr, category: selectedCat, content, read: false };
+        if (selectedCat === 'request') newB.requestId = 'R' + Date.now();
+        bulletinsData.push(newB);
+        publishHistory.push({ title, cat: selectedCat, time: timeStr });
+        render(getCurrentFilter(), getSearchTerm());
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newContent').value = '';
+        updateHistoryList();
+        setMainView('history');
+      });
+
+      updateHistoryList();
+    })();
+  </script>
+</body>
+</html>

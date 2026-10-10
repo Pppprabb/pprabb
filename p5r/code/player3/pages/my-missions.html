@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我的任务｜P5R 原型</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../../player4/characters.css" />
+    <style>
+      body.site.show-plain{ --mm-red:#ff0022; }
+      /* 整页不滚动：仅任务列表区域内部滚动；列表区高度为视口一半，页尾占位 2cm */
+      html{
+        height:100%;
+        overflow:hidden;
+      }
+      body.site.show-plain{
+        min-height:100%;
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+      }
+      body.site.show-plain .layout{
+        min-height:0;
+        flex:1 1 auto;
+        height:auto;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+      }
+      body.site.show-plain .layout > main{
+        flex:1;
+        min-height:0;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+      }
+      body.site.show-plain .myContentWrap{
+        flex:1;
+        min-height:0;
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+      }
+      /* 关键：不要复用 shared 的 `.list`（固定高度 + 内部滚动），否则会出现“整页滚动条/内部滚动”错位 */
+      #myMissionsRoot.myMissionsList{
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        margin-top: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        scrollbar-gutter: auto !important;
+      }
+      #myMissionsRoot .missionRow{
+        position:relative;
+        display:grid;
+        grid-template-columns: 96px 1fr auto;
+        gap:12px;
+        align-items:stretch;
+        border:1px solid rgba(255,255,255,.16);
+        border-radius:0;
+        margin-bottom:10px;
+        padding:10px 12px;
+        background:linear-gradient(90deg, rgba(255,255,255,.08), transparent 30%), rgba(5,5,8,.82);
+        transform:skew(-10deg);
+        overflow:hidden;
+        transition:border-color .15s, box-shadow .15s, transform .15s;
+      }
+      #myMissionsRoot .missionRow:hover{
+        transform:skew(-10deg) translateX(4px);
+        border-color:rgba(255,255,255,.45);
+        box-shadow:0 0 0 1px rgba(255,0,34,.45);
+      }
+      #myMissionsRoot .missionRow:last-child{ margin-bottom:0; }
+      #myMissionsRoot .missionRow::before{
+        content:"";
+        position:absolute; left:0; top:0; width:55%; height:3px;
+        background:linear-gradient(90deg, var(--mm-red), rgba(255,255,255,.8), transparent);
+      }
+      #myMissionsRoot .missionRow[data-rq-grade]::after{
+        content: attr(data-rq-grade);
+        position:absolute; right:10px; top:50%;
+        transform:translateY(-52%) skew(10deg);
+        font-size:56px; line-height:1; font-weight:1000;
+        color:rgba(255,255,255,.16); pointer-events:none;
+      }
+      #myMissionsRoot .missionRow > div{ transform:skew(10deg); }
+      #myMissionsRoot .missionThumb{
+        border:1px solid rgba(255,255,255,.26);
+        background:rgba(0,0,0,.5);
+        min-height:86px;
+        overflow:hidden;
+      }
+      #myMissionsRoot .missionThumb img{
+        width:100%; height:100%; object-fit:cover; display:block;
+        transform: skew(2deg) scale(1.02);
+      }
+      #myMissionsRoot .missionBody{ min-width:0; }
+      #myMissionsRoot .missionRow__title{
+        font-size:22px; font-weight:1000; letter-spacing:.05em;
+      }
+      #myMissionsRoot .missionRow__meta{ opacity:.95; }
+      #myMissionsRoot .missionSummary{
+        margin-top:8px; font-size:13px; opacity:.86; line-height:1.5;
+        display:-webkit-box; -webkit-line-clamp:2; line-clamp:2;
+        -webkit-box-orient:vertical; overflow:hidden;
+      }
+      #myMissionsRoot .missionTagRow{
+        margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+      }
+      #myMissionsRoot .missionTag{
+        font-size:12px; padding:3px 8px; border:1px solid #0a0a0a;
+        background:#fff; color:#0a0a0a; border-radius:999px;
+      }
+      #myMissionsRoot .missionTag--red,
+      #myMissionsRoot .missionTag--cyan{
+        border-color:#0a0a0a;
+        background:#fff;
+        color:#0a0a0a;
+      }
+      #myMissionsRoot .missionActions{
+        display:flex; flex-direction:column; justify-content:center; align-items:flex-end;
+        gap:8px; min-width:120px; transform:rotate(3deg) skew(10deg); transform-origin:center right;
+      }
+      #myMissionsRoot .missionActions .p5-btn-ctn{
+        border:1px solid rgba(255,255,255,.3); width:120px; min-height:40px;
+        padding-left:12px; padding-right:12px; white-space:nowrap; transform:skew(-12deg);
+      }
+      #myMissionsRoot .missionBtnDone:hover{
+        color:#000 !important;
+      }
+      .missionTabs{ gap:10px; }
+      .missionTab{
+        transform:skew(-16deg); border-radius:0; padding:8px 16px;
+        border:1px solid rgba(255,255,255,.32); background:#fff; color:#000; font-weight:900;
+      }
+      .missionTab:hover{ transform:skew(-16deg) translateY(-1px); }
+      .missionTab.is-active{ background:var(--mm-red); border-color:var(--mm-red); color:#fff; }
+      @media (max-width: 860px){
+        #myMissionsRoot .missionRow{ grid-template-columns:72px 1fr; grid-template-rows:auto auto; transform:none; }
+        #myMissionsRoot .missionRow:hover{ transform:translateX(2px); }
+        #myMissionsRoot .missionRow > div{ transform:none; }
+        #myMissionsRoot .missionActions{
+          grid-column:1 / -1; flex-direction:row; justify-content:flex-end; align-items:center; flex-wrap:wrap;
+        }
+      }
+
+      /* ========= 公告页同款：背景 + 两栏布局 + 右侧列表板块 ========= */
+      body.site.show-plain{
+        position: relative;
+        min-height: 0;
+        background: transparent;
+        /* 固定页脚占位 + 页尾上方 2cm 留白，避免正文被遮住 */
+        padding-bottom: calc(52px + 2cm + env(safe-area-inset-bottom, 0px));
+      }
+      body.site.show-plain::after{
+        content:"";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background: url('../../../皇家p5r/雨宫莲/背景.png') no-repeat center center;
+        background-size: cover;
+        pointer-events: none;
+      }
+      body.site.show-plain::before{
+        content:"";
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        background: rgba(0,0,0,.35);
+        pointer-events: none;
+      }
+      body.site.show-plain .layout,
+      body.site.show-plain .footer{
+        position: relative;
+        z-index: 5;
+      }
+      /* 公告页同款：固定页尾（黑底白字） */
+      body.site.show-plain .footer{
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+        text-align: center;
+        font-size: 0.9rem;
+        background: #000000;
+        color: #ffffff;
+        border-top: none;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.45);
+      }
+      body.site.show-plain .footerRow{
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 1;
+      }
+      .layout{
+        max-width: none;
+        margin: 0 auto;
+        padding: 1cm 20px 0;
+        box-sizing: border-box;
+        /* 覆盖 shared 的 grid 两栏布局，强制正文居中 */
+        display: block;
+      }
+      .aside{
+        width: 200px;
+        padding: calc(24px + 2cm) 12px 24px;
+        background: rgba(5, 2, 2, 0.9);
+        border-right: 1px solid #622;
+        backdrop-filter: none;
+        overflow: visible;
+      }
+      .main{
+        padding: 24px 0;
+        /* 滚动性能：backdrop-filter 会在滚动时每帧做昂贵采样 */
+        backdrop-filter: none;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      body.site.show-plain .main{
+        flex:1;
+        min-height:0;
+        overflow:hidden;
+      }
+      .myContentWrap{
+        width: min(76vw, 1600px);
+        max-width: 100%;
+      }
+      body.site.show-plain .myContentWrap{
+        align-self:stretch;
+        margin-left:auto;
+        margin-right:auto;
+      }
+      .aside .p5-title-ctn,
+      .aside .p5-title-ctn span{
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      .myAside-kv{
+        margin-top: 10px;
+        line-height: 1.7;
+        font-size: 13px;
+        color: rgba(255,255,255,.88);
+      }
+      .myAside-kv b{ color:#fff; }
+      .aside .myAside-sub{
+        margin-top: 8px;
+        font-size: 12px;
+        color: rgba(255,255,255,.78);
+      }
+      .aside .myAside-actions{
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .aside .my-filterSelect{
+        display:block;
+        width:100%;
+        margin-top: 10px;
+        padding: 10px 28px 10px 12px;
+        border: 2px solid #633;
+        border-radius: 0;
+        background-color: rgba(12, 5, 5, 0.98);
+        background-image: linear-gradient(45deg, transparent 50%, #b66 50%), linear-gradient(135deg, #b66 50%, transparent 50%);
+        background-position: calc(100% - 16px) calc(50% + 2px), calc(100% - 11px) calc(50% + 2px);
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+        color: #e0c0c0;
+        font-weight: bold;
+        font-size: 14px;
+        cursor: pointer;
+        box-sizing: border-box;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+      .aside .my-filterSelect:hover,
+      .aside .my-filterSelect:focus{
+        background-color: #3a2a2a;
+        color: #fff0e0;
+        border-color: #b66;
+        outline: none;
+      }
+      .aside .my-filterSelect option{
+        background:#1a0a0a;
+        color:#e8e0e0;
+      }
+      .myTitleRow{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+      }
+      .title-skew{
+        display:flex;
+        align-items:center;
+        gap:0;
+        margin-bottom: 10px;
+        width: auto;
+        box-sizing: border-box;
+      }
+      .myStatsBadge{
+        transform: skewX(-6deg);
+        background: #2a1010;
+        color: #faa;
+        padding: 4px 12px;
+        font-size: 1rem;
+        font-weight: bold;
+        border: 1px solid #a44;
+        box-shadow: 2px 2px 0 #1a0303;
+        white-space: nowrap;
+      }
+      .myStatsBadge span{ display:inline-block; transform: skewX(6deg); }
+      .myToolbar{
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 12px;
+        width: 100%;
+        flex: 0 0 auto;
+        /* 任务量不大：不需要横向滚动容器（避免滚动条/滚轮命中区域异常） */
+        overflow-x: visible;
+        padding-bottom: 6px;
+      }
+      .myToolbar::-webkit-scrollbar{ height: 8px; }
+      .myToolbar::-webkit-scrollbar-track{ background: rgba(255,255,255,.08); }
+      .myToolbar::-webkit-scrollbar-thumb{ background: rgba(255,0,34,.55); }
+      .myToolbar > *{ flex: 0 0 auto; }
+      @media (max-width: 860px){
+        .myContentWrap{ width: min(92vw, 980px); }
+        .myToolbar{
+          flex-wrap: wrap;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+          overscroll-behavior-y: none;
+          touch-action: pan-y;
+        }
+      }
+      /* 与委托板页签一致 */
+      .rq-menuTag{
+        border:1px solid rgba(255,255,255,.3);
+        background:#fff;
+        color:#000;
+        padding:5px 12px;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.08em;
+        transform:skew(-16deg);
+        cursor:pointer;
+      }
+      .rq-menuTag b{
+        display:inline-block;
+        transform:skew(16deg);
+      }
+      .rq-menuTag--active{
+        background:var(--mm-red);
+        color:#fff;
+        border-color:var(--mm-red);
+      }
+      .myTabBtn{
+        transform: skewX(-16deg);
+        border-radius: 0;
+        padding: 8px 16px;
+        border: 1px solid rgba(255,255,255,.32);
+        background: #fff;
+        color: #000;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .myTabBtn:hover{ transform: skewX(-16deg) translateY(-1px); }
+      .myTabBtn.is-active{
+        background: var(--mm-red);
+        border-color: var(--mm-red);
+        color: #fff;
+      }
+      .myTabClearBtn{
+        transform: skewX(-16deg);
+        border-radius: 0;
+        padding: 8px 16px;
+        border: 1px solid rgba(255,255,255,.32);
+        background: rgba(0,0,0,.55);
+        color: rgba(255,255,255,.92);
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .myTabClearBtn:hover{
+        transform: skewX(-16deg) translateY(-1px);
+        border-color: rgba(255,0,34,.55);
+        box-shadow: 0 0 0 1px rgba(255,0,34,.25);
+      }
+      .skew-char{
+        display:inline-block;
+        font-family: 'Anton', 'Impact', 'Noto Sans SC', sans-serif;
+        font-size: 3.2rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        color: #e8ddd5;
+        text-shadow: 3px 3px 0 #500, 1px 1px 0 #200;
+        letter-spacing: -2px;
+      }
+      .char1 { transform: rotate(-5deg) translateY(2px); }
+      .char2 { transform: rotate(3deg) translateY(-4px); }
+      .char3 { transform: rotate(-7deg) translateY(6px); }
+      .char4 {
+        transform: rotate(4deg) translateY(-2px);
+        position: relative;
+        color: black;
+        text-shadow: none;
+        z-index: 3;
+      }
+      .char4::after{
+        content:"";
+        position:absolute;
+        top:50%;
+        left:50%;
+        width:1.3em;
+        height:1.3em;
+        background:#f0f0f0;
+        transform: translate(-50%, -50%) rotate(45deg);
+        z-index:-1;
+        box-shadow: 0 0 8px #c44, 0 0 0 2px #822;
+        border: 1px solid black;
+      }
+      .myMissionsSection{
+        margin-top: 10px;
+        flex: 0 0 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: rgba(6, 3, 3, 0.95);
+        border: 2px solid #722;
+        box-shadow: 6px 6px 0 #140202, inset 0 0 15px rgba(80,0,0,0.2);
+        padding: 0 0 22px;
+        /* 滚动性能：列表区域不再使用 blur + clip-path（滚动时非常吃 GPU） */
+        backdrop-filter: none;
+        clip-path: none;
+        overflow: hidden;
+      }
+      .myMissionsScroll{
+        flex: 0 0 auto;
+        height: 50vh;
+        max-height: 50vh;
+        min-height: 0;
+        margin-top: 0;
+        border-radius: 0;
+        border: 1px solid rgba(255,255,255,.24);
+        background: rgba(0,0,0,.50);
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 10px 22px 12px;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body class="site show-plain p5r-characters">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img class="p5r-logo" src="../../../shared/p5ui/assets/src-assets/logo.png" alt="logo" />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="./requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item is-current" href="./my-missions.html" aria-current="page">我的任务</a>
+            </div>
+          </details>
+          <a class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo" href="../../player1/pages/bulletins.html">公告</a>
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="main">
+        <div class="myContentWrap">
+          <div class="myTitleRow" aria-label="页面标题与统计">
+            <div class="title-skew" aria-label="页面标题">
+              <span class="skew-char char1">我</span>
+              <span class="skew-char char2">的</span>
+              <span class="skew-char char3">任</span>
+              <span class="skew-char char4">务</span>
+            </div>
+            <div class="myStatsBadge" aria-label="统计">
+              <span>已接取：<b id="myCountAccepted">0</b>　已完成：<b id="myCountCompleted">0</b>　已放弃：<b id="myCountAbandoned">0</b></span>
+            </div>
+          </div>
+
+          <div class="myToolbar" aria-label="页签与清空操作">
+            <button type="button" class="rq-menuTag rq-menuTag--active" data-my-tab="accepted"><b>已接取</b></button>
+            <button id="myClearAccepted" class="myTabClearBtn" type="button">清空已接取</button>
+            <button type="button" class="rq-menuTag" data-my-tab="completed"><b>已完成</b></button>
+            <button id="myClearCompleted" class="myTabClearBtn" type="button">清空已完成</button>
+            <button type="button" class="rq-menuTag" data-my-tab="abandoned"><b>已放弃</b></button>
+            <button id="myClearAbandoned" class="myTabClearBtn" type="button">清空已放弃</button>
+            <button id="myClearAll" class="myTabClearBtn" type="button">清空全部</button>
+          </div>
+          <div class="myMissionsSection">
+            <div class="myMissionsScroll" aria-label="任务列表（可滚动）">
+              <div id="myMissionsRoot" class="myMissionsList" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="footerRow">Phantom Thieves</div>
+    </footer>
+
+    <script src="./requests-data.js"></script>
+    <script src="../../shared/site.js"></script>
+    <script>
+      (function () {
+        var KEY_MY = "p5_proto_my_missions";
+        var root = document.getElementById("myMissionsRoot");
+        if (!root) return;
+        var IMG_FALLBACK = "../../../shared/p5ui/assets/src-assets/images/portraits/mona.png";
+        var currentTab = "accepted";
+
+        function byId(id) { return document.getElementById(id); }
+        function readState() {
+          try {
+            var raw = JSON.parse(localStorage.getItem(KEY_MY) || "{}") || {};
+            return {
+              accepted: Array.isArray(raw.accepted) ? raw.accepted : [],
+              completed: Array.isArray(raw.completed) ? raw.completed : [],
+              abandoned: Array.isArray(raw.abandoned) ? raw.abandoned : []
+            };
+          } catch (e) {
+            return { accepted: [], completed: [], abandoned: [] };
+          }
+        }
+        function writeState(next) { localStorage.setItem(KEY_MY, JSON.stringify(next)); }
+        function levelToGrade(level) {
+          var stars = (String(level || "").match(/★/g) || []).length;
+          if (stars >= 4) return "A";
+          if (stars === 3) return "B";
+          if (stars === 2) return "C";
+          return "D";
+        }
+        function findTaskById(id) {
+          var cat = Array.isArray(window.P5_TASK_CATALOG) ? window.P5_TASK_CATALOG : [];
+          for (var i = 0; i < cat.length; i++) if (cat[i] && cat[i].id === id) return cat[i];
+          return null;
+        }
+        function idxById(arr, id) {
+          for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].id === id) return i;
+          return -1;
+        }
+        function goDetail(id) {
+          var u = new URL("./detail.html", location.href);
+          u.searchParams.set("id", id);
+          location.href = u.href;
+        }
+        function tabArray(st) {
+          if (currentTab === "completed") return st.completed;
+          if (currentTab === "abandoned") return st.abandoned;
+          return st.accepted;
+        }
+        function setCounts(st) {
+          byId("myCountAccepted").textContent = String(st.accepted.length);
+          byId("myCountCompleted").textContent = String(st.completed.length);
+          byId("myCountAbandoned").textContent = String(st.abandoned.length);
+        }
+        function render() {
+          var st = readState();
+          setCounts(st);
+          var arr = tabArray(st);
+          root.innerHTML = "";
+          if (!arr.length) {
+            var empty = document.createElement("div");
+            empty.className = "muted";
+            empty.style.padding = "18px 8px";
+            empty.textContent = currentTab === "completed" ? "暂无已完成记录。"
+              : currentTab === "abandoned" ? "暂无已放弃记录。"
+              : "暂无已接取任务。请到委托板点击「接取」。";
+            root.appendChild(empty);
+            return;
+          }
+
+          arr.forEach(function (row) {
+            var task = findTaskById(row.id) || row || {};
+            var line = document.createElement("div");
+            line.className = "missionRow";
+            line.setAttribute("data-rq-grade", levelToGrade(task.level || row.level || ""));
+
+            var thumb = document.createElement("div");
+            thumb.className = "missionThumb";
+            var img = document.createElement("img");
+            img.alt = "";
+            img.src = task.cover || row.cover || IMG_FALLBACK;
+            thumb.appendChild(img);
+
+            var body = document.createElement("div");
+            body.className = "missionBody";
+            body.innerHTML =
+              '<div class="missionRow__title">' + (row.title || task.title || row.id) + "</div>" +
+              '<div class="missionRow__meta">' + (row.id || "") + " · " + (task.tag || row.tag || "任务") + " · " + (task.district || row.district || "—") + " · 难度 " + levelToGrade(task.level || row.level || "") + "</div>" +
+              '<div class="missionSummary">' + (task.summary || row.summary || "暂无任务简介。") + "</div>";
+            var tagRow = document.createElement("div");
+            tagRow.className = "missionTagRow";
+            var t1 = document.createElement("span");
+            t1.className = "missionTag missionTag--red";
+            t1.textContent = task.tag || row.tag || "任务";
+            var t2 = document.createElement("span");
+            t2.className = "missionTag missionTag--cyan";
+            t2.textContent = task.client || row.client || "怪盗团";
+            tagRow.appendChild(t1);
+            tagRow.appendChild(t2);
+            body.appendChild(tagRow);
+
+            var acts = document.createElement("div");
+            acts.className = "missionActions";
+            if (currentTab === "accepted") {
+              var bDone = document.createElement("button");
+              bDone.type = "button";
+              bDone.className = "p5-btn-ctn p5-hover-animation-mix missionBtnDone";
+              bDone.textContent = "完成";
+              bDone.onclick = function () {
+                var cur = readState();
+                var ix = idxById(cur.accepted, row.id);
+                if (ix < 0) return;
+                var picked = cur.accepted.splice(ix, 1)[0];
+                picked.completedAt = Date.now();
+                cur.completed.unshift(picked);
+                writeState(cur);
+                render();
+              };
+              var bAbandon = document.createElement("button");
+              bAbandon.type = "button";
+              bAbandon.className = "p5-btn-ctn p5-hover-animation-gray";
+              bAbandon.textContent = "放弃";
+              bAbandon.onclick = function () {
+                var cur = readState();
+                var ix = idxById(cur.accepted, row.id);
+                if (ix < 0) return;
+                var picked = cur.accepted.splice(ix, 1)[0];
+                picked.abandonedAt = Date.now();
+                cur.abandoned.unshift(picked);
+                writeState(cur);
+                render();
+              };
+              acts.appendChild(bDone);
+              acts.appendChild(bAbandon);
+            }
+            var bDetail = document.createElement("button");
+            bDetail.type = "button";
+            bDetail.className = "p5-btn-ctn p5-hover-animation-gray";
+            bDetail.textContent = "详情";
+            bDetail.onclick = function () { goDetail(row.id); };
+            acts.appendChild(bDetail);
+
+            line.appendChild(thumb);
+            line.appendChild(body);
+            line.appendChild(acts);
+            root.appendChild(line);
+          });
+        }
+        function bindTabs() {
+          var btns = document.querySelectorAll("[data-my-tab]");
+          if (!btns || !btns.length) return;
+
+          function sync() {
+            btns.forEach(function (b) {
+              var v = String(b.getAttribute("data-my-tab") || "");
+              if (v === currentTab) b.classList.add("rq-menuTag--active");
+              else b.classList.remove("rq-menuTag--active");
+            });
+          }
+
+          btns.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              currentTab = String(btn.getAttribute("data-my-tab") || "accepted");
+              sync();
+              render();
+            });
+          });
+
+          sync();
+        }
+        function bindClears() {
+          function clear(which) {
+            var st = readState();
+            if (which === "accepted") st.accepted = [];
+            else if (which === "completed") st.completed = [];
+            else if (which === "abandoned") st.abandoned = [];
+            else { st.accepted = []; st.completed = []; st.abandoned = []; }
+            writeState(st);
+            render();
+          }
+          byId("myClearAccepted").onclick = function () { clear("accepted"); };
+          byId("myClearCompleted").onclick = function () { clear("completed"); };
+          byId("myClearAbandoned").onclick = function () { clear("abandoned"); };
+          byId("myClearAll").onclick = function () { clear("all"); };
+        }
+        bindTabs();
+        bindClears();
+        render();
+      })();
+    </script>
+  </body>
+</html>

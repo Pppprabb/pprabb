@@ -1,0 +1,4 @@
+package com.example.campuscircle.db;
+
+public class TaskDao {
+}

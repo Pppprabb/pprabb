@@ -1,0 +1,95 @@
+/* 人物画册：陳山羊式错层翻页；黑底；点击一步一步翻；固定 z-index 避免已翻页互相乱盖 */
+
+body[data-p5r-page="book-flip"]{
+  background-color: #4b0010; /* 深红底色 */
+  background-image: none;
+}
+
+body[data-p5r-page="book-flip"] .p5r-bookFlipMain{
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: calc(100vh - 72px);
+  padding: calc(150px + 2cm) 16px 48px;
+}
+
+body[data-p5r-page="book-flip"] .a{
+  width: 270px;
+  height: 420px;
+  margin-left: 0;
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 1.8s ease;
+}
+
+body[data-p5r-page="book-flip"] .b,
+body[data-p5r-page="book-flip"] .p5r-flipPage{
+  width: 270px;
+  height: 400px;
+  position: absolute;
+  transform-origin: left;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* 只过渡 transform；z-index 用 --p5-front / --p5-back，避免多页同值时按 DOM 乱盖 */
+  transition: transform calc(var(--i) * 0.66s);
+}
+
+/* 封面永远在最底；内页用 --p5-front 阶梯，保证「下一页要翻」在最上；.is-behind 仅在动画结束后由 JS 加上 */
+body[data-p5r-page="book-flip"] .a .b{
+  z-index: 10;
+}
+
+body[data-p5r-page="book-flip"] .a .p5r-flipPage{
+  z-index: var(--p5-front);
+}
+
+body[data-p5r-page="book-flip"] .a .p5r-flipPage.is-behind{
+  z-index: var(--p5-back);
+}
+
+body[data-p5r-page="book-flip"] .b,
+body[data-p5r-page="book-flip"] .c{
+  border: solid 20px #576574;
+  border-left: none;
+  top: -20px;
+  border-radius: 0 20px 20px 0;
+}
+
+/* 点击一步一步翻：.is-open 表示已开始翻，.is-flipped 表示该页已翻过去 */
+body[data-p5r-page="book-flip"] .a.is-open{
+  transform: translateX(100px);
+}
+
+body[data-p5r-page="book-flip"] .a.is-open .b{
+  border-left: #576574 20px solid;
+}
+
+body[data-p5r-page="book-flip"] .a .p5r-flipPage{
+  transform: rotateY(0deg);
+}
+
+body[data-p5r-page="book-flip"] .a .p5r-flipPage.is-flipped{
+  transform: rotateY(-180deg);
+}
+
+/* 可点击提示 */
+body[data-p5r-page="book-flip"] .a{
+  cursor: pointer;
+  outline: none;
+}
+
+body[data-p5r-page="book-flip"] .a:focus-visible{
+  outline: 2px solid rgba(28, 254, 255, 0.55);
+  outline-offset: 6px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  body[data-p5r-page="book-flip"] .a,
+  body[data-p5r-page="book-flip"] .b,
+  body[data-p5r-page="book-flip"] .p5r-flipPage{
+    transition-duration: 0.01ms !important;
+  }
+}

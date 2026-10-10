@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>人物画册</title>
+
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../characters.css" />
+    <link rel="stylesheet" href="../book-flip.css" />
+  </head>
+
+  <body class="p5r-characters" data-p5r-page="book-flip">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img
+          class="p5r-logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/requests.html">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player3/pages/my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a
+            class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo"
+            href="../../player1/pages/bulletins.html"
+            >公告</a
+          >
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a
+                class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item is-current"
+                href="../../player4/pages/book-flip.html"
+                aria-current="page"
+                >人物画册</a
+              >
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 下方结构与「陳山羊/翻页动画」demo 一致：.b 封面 + .p5r-flipPage 内页；改为点击一步一步翻 -->
+    <main class="p5r-bookFlipMain" aria-label="人物画册翻页">
+      <div class="a" id="p5rFlipBook" aria-label="点击右侧下一页，左侧上一页" tabindex="0">
+        <div
+          class="b"
+          style="--i: 2; background-image: url('../../../皇家p5r/高卷杏/高卷杏背景图（后期角色缩小放中间）.png')"
+        ></div>
+        <div
+          class="c p5r-flipPage"
+          style="--i: 4.5; --s: 1; --p5-front: 100; --p5-back: -60; background-image: url('../../../皇家p5r/喜多川祐介/2024-10-21 221242.jpg')"
+        ></div>
+        <div
+          class="p5r-flipPage"
+          style="--i: 4.25; --s: 2; --p5-front: 90; --p5-back: -50; background-image: url('../../../皇家p5r/喜多川祐介/人物插图 (1).png')"
+        ></div>
+        <div
+          class="p5r-flipPage"
+          style="--i: 4; --s: 3; --p5-front: 80; --p5-back: -40; background-image: url('../../../皇家p5r/喜多川祐介/人物插图 (3).png')"
+        ></div>
+        <div
+          class="p5r-flipPage"
+          style="--i: 3.5; --s: 4; --p5-front: 70; --p5-back: -30; background-image: url('../../../皇家p5r/高卷杏/人物素材2 (1).png')"
+        ></div>
+        <div
+          class="d p5r-flipPage"
+          style="--i: 3; --s: 5; --p5-front: 60; --p5-back: -20; background-image: url('../../../皇家p5r/雨宫莲/背景角色素材 (3).png')"
+        ></div>
+        <div
+          class="e p5r-flipPage"
+          style="--i: 2.5; --s: 6; --p5-front: 50; --p5-back: -10; background-image: url('../../../皇家p5r/芳泽霞/芳泽霞人物素材 (1).png')"
+        ></div>
+        <div
+          class="f p5r-flipPage"
+          style="--i: 2; --s: 7; --p5-front: 40; --p5-back: 0; background-image: url('../../../皇家p5r/雨宫莲/雨宫莲背景素材.png')"
+        ></div>
+        <div
+          class="p5r-flipPage"
+          style="--i: 1.5; --s: 8; --p5-front: 30; --p5-back: 10; background-image: url('../../../皇家p5r/新岛真/新岛真背景素材.png')"
+        ></div>
+      </div>
+    </main>
+
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display:none;">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="p5MsgHost"></div>
+    <div id="p5BackTop" class="p5-top-ctn" hidden style="right: 28px; bottom: 28px;">
+      <img src="../../../shared/p5ui/assets/src-assets/images/back-top.png" alt="back top" />
+    </div>
+    <div id="p5Zoom" class="p5-zoom-ctn" style="display:none;">
+      <div class="p5-zoom-sub-ctn">
+        <img class="p5-zoom-img" src="" alt="zoom" />
+        <img class="p5-zoom-close" src="../../../shared/p5ui/assets/src-assets/images/upload/close.png" alt="close" />
+      </div>
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script src="../book-flip.js"></script>
+  </body>
+</html>

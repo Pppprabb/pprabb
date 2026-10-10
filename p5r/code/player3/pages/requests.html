@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>委托板（Mementos Requests）｜P5R 原型</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="../../player4/characters.css" />
+    <style>
+      /* Player3: 委托页本地化重皮肤（不改 shared） */
+      .requests-stage{
+        --rq-bg:#06070a;
+        --rq-ink:#f4f6fa;
+        --rq-red:#ff0022;
+        --rq-panel:rgba(0,0,0,.74);
+        background: var(--rq-bg);
+        color:var(--rq-ink);
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+        /* 禁止整页下滑：把滚动收敛到内部区域 */
+        overflow: hidden;
+      }
+      /* 彻底禁止页面滚动（滚轮/触控板/触屏） */
+      html, body.requests-stage{
+        height: 100%;
+        overflow: hidden;
+      }
+      /* 公告页同款：固定背景（滚动不动） */
+      body.requests-stage::after{
+        content:"";
+        position: fixed;
+        top:0; left:0; right:0; bottom:0;
+        z-index: 0;
+        background: url('../../../皇家p5r/雨宫莲/背景.png') no-repeat center center;
+        background-size: cover;
+        pointer-events: none;
+      }
+      body.requests-stage::before{
+        content:"";
+        position: fixed;
+        top:0; left:0; right:0; bottom:0;
+        z-index: 1;
+        background: rgba(0,0,0,0.35);
+        pointer-events: none;
+      }
+      body.requests-stage .layout,
+      body.requests-stage .footer{
+        position: relative;
+        z-index: 5;
+      }
+      /* 公告页同款：固定页尾 */
+      .requests-stage .footer{
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        display: block;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+        text-align: center;
+        font-size: 0.9rem;
+        background: #000000;
+        color: #ffffff;
+        border-top: none;
+        box-shadow: 0 -4px 24px rgba(0,0,0,.45);
+      }
+      .requests-stage .footerRow{
+        margin:0;
+        font-size: 0.9rem;
+        opacity: 1;
+      }
+      .requests-stage .main{
+        position:relative;
+        padding-top:30px;
+        /* 内容区更宽：正文居中（接近人物介绍页的版心） */
+        width: min(76vw, 1600px);
+        max-width: 100%;
+        margin: 0 auto;
+        height: auto;
+        overflow: visible;
+      }
+      .requests-stage .layout{
+        /* 取消 shared 的窄宽限制（只作用委托板） */
+        max-width: none;
+        /* 覆盖 shared 的 grid 两栏布局（委托板现在无侧栏） */
+        display: block;
+      }
+      .requests-stage .main > h1.p5-title-ctn{
+        margin-top:0;
+        margin-bottom:14px;
+      }
+      .requests-stage .main > h1.p5-title-ctn > span{
+        letter-spacing:.08em;
+        text-shadow:
+          -2px -2px 0 #000,
+          2px -2px 0 #000,
+          -2px 2px 0 #000,
+          2px 2px 0 #000;
+      }
+      /* 标题：与“我的任务”同款倾斜字样 */
+      .rqTitleSkew{
+        display:flex;
+        align-items:center;
+        gap:0;
+        margin: 0 0 10px;
+        width: auto;
+        box-sizing: border-box;
+      }
+      .rqSkewChar{
+        display:inline-block;
+        font-family: 'Anton', 'Impact', 'Noto Sans SC', sans-serif;
+        font-size: 3.2rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        color: #e8ddd5;
+        text-shadow: 3px 3px 0 #500, 1px 1px 0 #200;
+        letter-spacing: -2px;
+      }
+      .rqChar1 { transform: rotate(-5deg) translateY(2px); }
+      .rqChar2 { transform: rotate(3deg) translateY(-4px); }
+      .rqChar3 {
+        transform: rotate(4deg) translateY(-2px);
+        position: relative;
+        color: black;
+        text-shadow: none;
+        z-index: 3;
+      }
+      .rqChar3::after{
+        content:"";
+        position:absolute;
+        top:50%;
+        left:50%;
+        width:1.3em;
+        height:1.3em;
+        background:#f0f0f0;
+        transform: translate(-50%, -50%) rotate(45deg);
+        z-index:-1;
+        box-shadow: 0 0 8px #c44, 0 0 0 2px #822;
+        border: 1px solid black;
+      }
+      .rq-menuBar{
+        margin:8px 0 12px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        align-items:center;
+      }
+      .rq-titleRow{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+      }
+      .rq-filterBtn{
+        border:1px solid rgba(255,255,255,.3);
+        background:#fff;
+        color:#000;
+        padding:5px 12px;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.08em;
+        transform:skew(-16deg);
+        cursor:pointer;
+      }
+      .rq-filterBtn b{ display:inline-block; transform:skew(16deg); }
+      .rq-filterBtn.is-open{
+        background:var(--rq-red);
+        color:#fff;
+        border-color:var(--rq-red);
+      }
+      .rq-filterPanel{
+        position:absolute;
+        right:0;
+        top: calc(100% + 10px);
+        /* 外层盒子紧贴包住两个下拉（宽度取两者中较宽者） */
+        width: max-content;
+        max-width: min(92vw, 420px);
+        border:2px solid rgba(255,255,255,.45);
+        background: rgba(0,0,0,.86);
+        box-shadow: 0 20px 60px rgba(0,0,0,.55);
+        padding: 12px 12px 14px;
+        z-index: 80;
+        clip-path: polygon(0 0, 98% 0, 100% 14%, 100% 100%, 2% 100%, 0 88%);
+      }
+      .rq-filterPanel .muted{ margin-top:0 !important; }
+      .rq-filterPanel .rq-filterRow{
+        display:flex;
+        flex-direction:column;
+        align-items:stretch;
+        gap:0;
+        margin:0;
+        width: max-content;
+        max-width: 100%;
+      }
+      .rq-filterPanel .rq-filterRow > .p5-nativeSelectWrap{
+        width: 100%;
+      }
+      /* 筛选下拉本体更窄：不强制拉满整行 */
+      .rq-filterPanel .p5-nativeSelectWrap{
+        width: 100%;
+        max-width: 100%;
+      }
+      .rq-filterPanel .rq-select{
+        width: 100%;
+        max-width: 100%;
+      }
+      .rq-filterPanel .rq-select__trigger{
+        width: 100%;
+        min-width: 0;
+      }
+      .rq-filterPanel .rq-select__value{
+        white-space: nowrap;
+      }
+      .rq-menuTag{
+        border:1px solid rgba(255,255,255,.3);
+        background:#fff;
+        color:#000;
+        padding:5px 12px;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.08em;
+        transform:skew(-16deg);
+      }
+      .rq-menuTag b{
+        display:inline-block;
+        transform:skew(16deg);
+      }
+      .rq-menuTag--active{
+        background:var(--rq-red);
+        color:#fff;
+        border-color:var(--rq-red);
+      }
+      .requests-stage .section{
+        border:2px solid rgba(255,255,255,.45);
+        border-radius:0;
+        background:
+          linear-gradient(140deg, rgba(255,255,255,.07), transparent 26%),
+          linear-gradient(320deg, rgba(255,0,34,.14), transparent 32%),
+          var(--rq-panel);
+        box-shadow: 0 20px 60px rgba(0,0,0,.45);
+        clip-path: polygon(0 0, 98% 0, 100% 14%, 100% 100%, 2% 100%, 0 88%);
+        overflow: visible;
+      }
+      .requests-stage #taskList.list.list--cards{
+        border-radius:0;
+        border:1px solid rgba(255,255,255,.24);
+        background:rgba(0,0,0,.50);
+        padding:10px 8px;
+        margin-top:10px;
+        height:auto;
+        max-height:none;
+        overflow:visible;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        clip-path: polygon(0 0, 100% 0, 100% 97%, 1.5% 100%, 0 95%);
+      }
+      .requests-stage .taskCard{
+        position:relative;
+        display:grid;
+        grid-template-columns: 94px 1fr auto;
+        gap:12px;
+        align-items:center;
+        min-height:104px;
+        border-radius:0;
+        border:1px solid rgba(255,255,255,.16);
+        background:
+          linear-gradient(90deg, rgba(255,255,255,.08), transparent 30%),
+          rgba(5,5,8,.82);
+        transform:skew(-10deg);
+        padding:10px 12px;
+        overflow:hidden;
+      }
+      .requests-stage .taskCard:hover{
+        transform:skew(-10deg) translateX(4px);
+        border-color:rgba(255,255,255,.45);
+        box-shadow:0 0 0 1px rgba(255,0,34,.45);
+      }
+      .requests-stage .taskCard::before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        width:55%;
+        height:3px;
+        background:linear-gradient(90deg, var(--rq-red), rgba(255,255,255,.8), transparent);
+      }
+      .requests-stage .taskCard[data-rq-grade]::after{
+        content: attr(data-rq-grade);
+        position:absolute;
+        right:10px;
+        top:50%;
+        transform:translateY(-52%) skew(10deg);
+        font-size:56px;
+        line-height:1;
+        font-weight:1000;
+        letter-spacing:.02em;
+        color:rgba(255,255,255,.16);
+        pointer-events:none;
+      }
+      .requests-stage .taskCard__thumb,
+      .requests-stage .taskCard__body,
+      .requests-stage .taskCard__actions{
+        transform:skew(10deg);
+      }
+      .requests-stage .taskCard__thumb{
+        border-radius:0;
+        width:94px;
+        height:86px;
+        overflow:hidden;
+        min-height:86px;
+        border-color:rgba(255,255,255,.26);
+      }
+      .requests-stage .taskCard__thumb img{
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+      }
+      .requests-stage .taskCard__title{
+        font-size:22px;
+        font-weight:1000;
+        letter-spacing:.05em;
+        line-height:1.1;
+      }
+      .requests-stage .taskCard__body{
+        min-width:0;
+      }
+      .requests-stage .taskCard__meta{
+        opacity:.96;
+        margin-top:2px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      .requests-stage .taskCard__summary{
+        opacity:.8;
+        margin-top:4px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+      .requests-stage .taskCard__tagRow{
+        margin-top:8px;
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+      .requests-stage .taskCard__actions{
+        min-width:120px;
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+      }
+      .requests-stage .taskCard__actions .p5-btn-ctn{ border:1px solid rgba(255,255,255,.3); }
+      .requests-stage .taskCard__actions .p5-hover-animation-mix:hover{
+        color:#000 !important;
+      }
+      /* 已接取：按钮变绿色 */
+      .requests-stage .rq-btnTaken{
+        background: #19c37d !important;
+        border-color: #19c37d !important;
+        color: #04130b !important;
+      }
+      .requests-stage .rq-btnTaken:hover{
+        background: #1fe091 !important;
+        border-color: #1fe091 !important;
+        color: #04130b !important;
+      }
+      .requests-stage .rq-btnTaken:disabled{
+        opacity: 1;
+        cursor: default;
+        filter: none;
+      }
+      /* 类型 / 区域等标签：白底黑字 */
+      .requests-stage .pill--red,
+      .requests-stage .pill--cyan{
+        border:1px solid #0a0a0a !important;
+        background:#fff !important;
+        color:#0a0a0a !important;
+      }
+      .requests-stage #taskPager{ margin-top:14px; }
+      .requests-stage #taskPager .p5-btn-ctn{ border:1px solid rgba(255,255,255,.35); }
+      .requests-stage #taskPager .p5-hover-animation-mix{
+        color:#fff;
+      }
+      .requests-stage #taskPager .p5-hover-animation-mix:hover{
+        color:#000 !important;
+      }
+      .requests-stage .aside .card{
+        border-radius:0;
+        background:rgba(0,0,0,.58);
+        overflow:visible;
+      }
+      .requests-stage .aside.aside--noScroll{
+        overflow:visible;
+        max-height:none;
+      }
+      .requests-stage .aside .card::before{ opacity:.34; }
+      .requests-stage .p5-nativeSelect{
+        appearance:none;
+        -webkit-appearance:none;
+        -moz-appearance:none;
+        width:100%;
+        height:40px;
+        padding:0 42px 0 12px;
+        border:1px solid rgba(255,255,255,.56);
+        border-radius:0;
+        background:
+          linear-gradient(118deg, rgba(255,0,34,.22), transparent 34%),
+          linear-gradient(302deg, rgba(28,254,255,.16), transparent 38%),
+          rgba(0,0,0,.86);
+        color:#fff;
+        font-size:18px;
+        font-weight:900;
+        letter-spacing:.06em;
+        line-height:38px;
+        text-shadow:
+          -1px -1px 0 #000,
+          1px -1px 0 #000,
+          -1px 1px 0 #000,
+          1px 1px 0 #000;
+        box-shadow:
+          inset 0 0 0 1px rgba(255,255,255,.08),
+          0 0 0 1px rgba(255,0,34,.25);
+        clip-path: polygon(0 0, 97% 0, 100% 18%, 100% 100%, 3% 100%, 0 84%);
+        transition:border-color .15s, box-shadow .15s, background .15s;
+      }
+      .requests-stage .p5-nativeSelect:hover{
+        border-color:#fff;
+      }
+      .requests-stage .p5-nativeSelect:focus{
+        outline:none;
+        border-color:var(--rq-red);
+        box-shadow:
+          0 0 0 1px rgba(255,0,34,.65),
+          0 0 14px rgba(255,0,34,.3),
+          inset 0 0 0 1px rgba(255,255,255,.10);
+      }
+      .requests-stage label[for="taskFilter"],
+      .requests-stage label[for="taskDistrictFilter"]{
+        margin-bottom:6px;
+        letter-spacing:.08em;
+      }
+      .requests-stage .p5-nativeSelectWrap{
+        position:relative;
+        transform:skew(-8deg);
+      }
+      .requests-stage .p5-nativeSelectWrap .p5-nativeSelect{
+        transform:skew(8deg);
+      }
+      .requests-stage .p5-nativeSelectWrap::before{
+        content:"";
+        position:absolute;
+        left:8px;
+        top:0;
+        width:88px;
+        height:2px;
+        background:linear-gradient(90deg, var(--rq-red), rgba(255,255,255,.75), transparent);
+        z-index:1;
+        pointer-events:none;
+      }
+      .requests-stage .p5-nativeSelectWrap::after{
+        content:none;
+      }
+      .requests-stage .p5-nativeSelect{
+        display:none !important;
+      }
+      .requests-stage .rq-select{
+        position:relative;
+        transform:skew(-8deg);
+        z-index:1;
+      }
+      .requests-stage .rq-select.is-open{
+        z-index:200;
+      }
+      .requests-stage .rq-select__trigger{
+        position:relative;
+        z-index:2;
+        width:100%;
+        height:40px;
+        border:1px solid rgba(255,255,255,.56);
+        background:
+          linear-gradient(118deg, rgba(255,0,34,.22), transparent 34%),
+          linear-gradient(302deg, rgba(28,254,255,.16), transparent 38%),
+          rgba(0,0,0,.92);
+        color:#fff;
+        font-size:18px;
+        font-weight:900;
+        letter-spacing:.06em;
+        text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        clip-path: polygon(0 0, 97% 0, 100% 18%, 100% 100%, 3% 100%, 0 84%);
+        transform:skew(8deg);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:0 14px 0 12px;
+        cursor:pointer;
+      }
+      .requests-stage .rq-select.is-open .rq-select__trigger{
+        border-color:var(--rq-red);
+        box-shadow:0 0 0 1px rgba(255,0,34,.7), 0 0 14px rgba(255,0,34,.3);
+      }
+      .requests-stage .rq-select__arrow{
+        width:10px;
+        height:10px;
+        border-right:2px solid #fff;
+        border-bottom:2px solid #fff;
+        transform:translateY(-2px) rotate(45deg);
+        transition:transform .15s;
+      }
+      .requests-stage .rq-select.is-open .rq-select__arrow{
+        transform:translateY(2px) rotate(225deg);
+      }
+      .requests-stage .rq-select__menu{
+        list-style:none;
+        margin:0;
+        padding:6px;
+        position:absolute;
+        top:calc(100% + 6px);
+        left:0;
+        right:0;
+        z-index:3;
+        background:rgba(0,0,0,.96);
+        border:1px solid rgba(255,255,255,.42);
+        box-shadow:0 12px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(255,0,34,.24);
+        clip-path: polygon(0 0, 98% 0, 100% 12%, 100% 100%, 2% 100%, 0 90%);
+        transform:skew(8deg);
+        max-height:220px;
+        overflow:auto;
+        scrollbar-width:thin;
+        scrollbar-color: rgba(255,0,34,.9) rgba(255,255,255,.08);
+      }
+      .requests-stage .rq-select__menu::-webkit-scrollbar{ width:8px; }
+      .requests-stage .rq-select__menu::-webkit-scrollbar-track{ background:rgba(255,255,255,.08); }
+      .requests-stage .rq-select__menu::-webkit-scrollbar-thumb{
+        background:linear-gradient(180deg, #ff0022, #7a0012);
+        border-radius:999px;
+      }
+      .requests-stage .rq-select__menu[hidden]{ display:none; }
+      .requests-stage .rq-select__option{
+        width:100%;
+        border:none;
+        background:transparent;
+        color:#fff;
+        text-align:left;
+        font-size:16px;
+        font-weight:900;
+        letter-spacing:.04em;
+        padding:8px 10px;
+        cursor:pointer;
+      }
+      .requests-stage .rq-select__option:hover{
+        background:linear-gradient(90deg, rgba(255,0,34,.35), rgba(255,0,34,.08));
+      }
+      .requests-stage .rq-select__option.is-active{
+        background:linear-gradient(90deg, rgba(255,0,34,.78), rgba(255,0,34,.2));
+      }
+      @media (max-width: 920px){
+        .requests-stage .taskCard{ transform:none; }
+        .requests-stage .taskCard:hover{ transform:translateX(2px); }
+        .requests-stage .taskCard__thumb,
+        .requests-stage .taskCard__body,
+        .requests-stage .taskCard__actions{ transform:none; }
+      }
+    </style>
+  </head>
+  <body class="site show-plain p5r-characters requests-stage">
+    <header class="p5r-header p5r-header--solid" role="banner">
+      <div class="p5r-header__left">
+        <img class="p5r-logo" src="../../../shared/p5ui/assets/src-assets/logo.png" alt="logo" />
+      </div>
+
+      <div class="p5r-header__right">
+        <nav class="p5r-header__nav" aria-label="委托、公告、联系与人物">
+          <details class="p5r-headerNav" id="p5rHeaderRequestsNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">委托</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="委托与我的任务">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item is-current" href="./requests.html" aria-current="page">委托</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="./my-missions.html">我的任务</a>
+            </div>
+          </details>
+          <a class="p5-btn-ctn p5-hover-animation-gray p5r-bulletinNavSolo" href="../../player1/pages/bulletins.html">公告</a>
+          <details class="p5r-headerNav" id="p5rHeaderContactNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">联系</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="联系与小游戏">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/contact.html">联系</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player2/pages/takamaki-3d.html">小游戏</a>
+            </div>
+          </details>
+          <details class="p5r-headerNav" id="p5rHeaderNav">
+            <summary class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__summary">
+              <span class="p5r-headerNav__summaryText">人物</span>
+              <span class="p5r-headerNav__caret" aria-hidden="true"></span>
+            </summary>
+            <div class="p5r-headerNav__panel" role="group" aria-label="人物子页面">
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/characters.html">人物</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/photo-stage.html">照片舞台</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/book-flip.html">人物画册</a>
+              <a class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item" href="../../player4/pages/card-draw.html">卡片抽取</a>
+            </div>
+          </details>
+        </nav>
+        <div class="p5r-headerUser" data-p5r-header-user>
+          <div class="p5r-profileEntryWrap">
+            <a id="profileEntry" class="p5-btn-ctn p5-hover-animation-gray" href="../../player4/pages/profile.html">个人中心</a>
+            <div class="p5r-headerUserMenu" role="group" aria-label="账户操作">
+              <button type="button" class="p5-btn-ctn p5-hover-animation-gray p5r-headerNav__item p5r-headerUserMenu__btn" data-p5r-logout>退出</button>
+            </div>
+          </div>
+          <span class="p5r-headerUserName" id="p5rHeaderUserName">游客</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="main">
+        <div class="rq-titleRow">
+          <div class="rqTitleSkew" aria-label="页面标题">
+            <span class="rqSkewChar rqChar1">委</span>
+            <span class="rqSkewChar rqChar2">托</span>
+            <span class="rqSkewChar rqChar3">板</span>
+          </div>
+          <div style="position:relative;">
+            <button id="rqFilterBtn" type="button" class="rq-filterBtn" aria-haspopup="dialog" aria-expanded="false"><b>筛选</b></button>
+            <div id="rqFilterPanel" class="rq-filterPanel" hidden>
+              <div class="row rq-filterRow" style="margin-top:0;">
+                <label class="muted" for="taskFilter" style="font-size:12px;">委托类型</label>
+                <div class="p5-nativeSelectWrap">
+                  <select id="taskFilter" class="p5-nativeSelect">
+                    <option value="all">全部</option>
+                    <option value="行动">行动</option>
+                    <option value="情报">情报</option>
+                    <option value="支援">支援</option>
+                  </select>
+                </div>
+                <label class="muted" for="taskDistrictFilter" style="font-size:12px;margin-top:10px;">区域</label>
+                <div class="p5-nativeSelectWrap">
+                  <select id="taskDistrictFilter" class="p5-nativeSelect">
+                    <option value="all">全部</option>
+                    <option value="涩谷">涩谷</option>
+                    <option value="秋叶原">秋叶原</option>
+                    <option value="四轩茶屋">四轩茶屋</option>
+                    <option value="新宿">新宿</option>
+                    <option value="秀尽学园">秀尽学园</option>
+                    <option value="异世界">异世界 / Mementos</option>
+                    <option value="神田">神田</option>
+                    <option value="霞关">霞关</option>
+                    <option value="吉祥寺">吉祥寺</option>
+                    <option value="全线">全线</option>
+                    <option value="六本木">六本木</option>
+                    <option value="目黑">目黑</option>
+                    <option value="台场">台场</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rq-menuBar" aria-hidden="true">
+          <span class="rq-menuTag rq-menuTag--active"><b>新规委托</b></span>
+          <span class="rq-menuTag"><b>状态排序</b></span>
+          <span class="rq-menuTag"><b>难度排序</b></span>
+        </div>
+        <div class="section">
+          <div id="taskList" class="list" aria-label="task list"></div>
+          <div id="taskPager" class="pager" aria-label="pager"></div>
+        </div>
+      </main>
+    </div>
+
+    <footer class="footer"><div class="footerRow">Phantom Thieves</div></footer>
+
+    <script src="./requests-data.js"></script>
+    <script src="../../shared/site.js"></script>
+    <script>
+      (function () {
+        var KEY_MY = "p5_proto_my_missions";
+        var host = document.getElementById("taskList");
+        var pager = document.getElementById("taskPager");
+        var filterSel = document.getElementById("taskFilter");
+        var distSel = document.getElementById("taskDistrictFilter");
+        if (!host || !pager) return;
+
+        var filterBtn = document.getElementById("rqFilterBtn");
+        var filterPanel = document.getElementById("rqFilterPanel");
+        function setFilterOpen(next) {
+          if (!filterBtn || !filterPanel) return;
+          var open = !!next;
+          filterPanel.hidden = !open;
+          filterBtn.classList.toggle("is-open", open);
+          filterBtn.setAttribute("aria-expanded", open ? "true" : "false");
+          if (!open) closeAllCustomSelects();
+        }
+        if (filterBtn && filterPanel) {
+          filterBtn.addEventListener("click", function () {
+            setFilterOpen(filterPanel.hidden);
+          });
+          document.addEventListener("click", function (e) {
+            if (!filterPanel || filterPanel.hidden) return;
+            var t = e.target;
+            if (filterPanel.contains(t) || filterBtn.contains(t)) return;
+            setFilterOpen(false);
+          });
+        }
+
+        var all = Array.isArray(window.P5_TASK_CATALOG) ? window.P5_TASK_CATALOG.slice() : [];
+        var page = 1;
+        var pageSize = 3;
+        var sortMode = "new";
+        function closeAllCustomSelects() {
+          document.querySelectorAll(".rq-select.is-open").forEach(function (el) {
+            el.classList.remove("is-open");
+            var menu = el.querySelector(".rq-select__menu");
+            if (menu) menu.hidden = true;
+          });
+        }
+        function initCustomSelect(selectEl) {
+          if (!selectEl || !selectEl.parentElement) return;
+          var wrap = selectEl.parentElement;
+          if (wrap.querySelector(".rq-select__trigger")) return;
+          wrap.classList.add("rq-select");
+          var trigger = document.createElement("button");
+          trigger.type = "button";
+          trigger.className = "rq-select__trigger";
+          trigger.innerHTML = '<span class="rq-select__value"></span><span class="rq-select__arrow" aria-hidden="true"></span>';
+          var valueEl = trigger.querySelector(".rq-select__value");
+          var menu = document.createElement("ul");
+          menu.className = "rq-select__menu";
+          menu.hidden = true;
+          function syncLabel() {
+            var selected = selectEl.options[selectEl.selectedIndex];
+            valueEl.textContent = selected ? selected.textContent : "全部";
+            menu.querySelectorAll(".rq-select__option").forEach(function (optBtn) {
+              optBtn.classList.toggle("is-active", optBtn.getAttribute("data-value") === selectEl.value);
+            });
+          }
+          Array.prototype.forEach.call(selectEl.options, function (opt) {
+            var li = document.createElement("li");
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "rq-select__option";
+            btn.setAttribute("data-value", opt.value);
+            btn.textContent = opt.textContent || "";
+            btn.onclick = function () {
+              if (selectEl.value !== opt.value) {
+                selectEl.value = opt.value;
+                selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+              closeAllCustomSelects();
+              syncLabel();
+            };
+            li.appendChild(btn);
+            menu.appendChild(li);
+          });
+          trigger.onclick = function (e) {
+            e.stopPropagation();
+            var opening = !wrap.classList.contains("is-open");
+            closeAllCustomSelects();
+            wrap.classList.toggle("is-open", opening);
+            menu.hidden = !opening;
+          };
+          selectEl.addEventListener("change", syncLabel);
+          wrap.appendChild(trigger);
+          wrap.appendChild(menu);
+          syncLabel();
+        }
+        document.addEventListener("click", function () { closeAllCustomSelects(); });
+        document.addEventListener("keydown", function (ev) {
+          if (ev.key === "Escape") closeAllCustomSelects();
+        });
+        initCustomSelect(filterSel);
+        initCustomSelect(distSel);
+
+        function gradeFromLevel(level) {
+          var stars = (String(level || "").match(/★/g) || []).length;
+          if (stars >= 4) return "A";
+          if (stars === 3) return "B";
+          if (stars === 2) return "C";
+          return "D";
+        }
+        function starsToScore(level) {
+          return (String(level || "").match(/★/g) || []).length;
+        }
+        function getStateMap() {
+          try {
+            var raw = JSON.parse(localStorage.getItem(KEY_MY) || "{}") || {};
+            var map = {};
+            (raw.accepted || []).forEach(function (x) { map[x.id] = "accepted"; });
+            (raw.completed || []).forEach(function (x) { map[x.id] = "completed"; });
+            (raw.abandoned || []).forEach(function (x) { map[x.id] = "abandoned"; });
+            return map;
+          } catch (e) {
+            return {};
+          }
+        }
+        function statusRank(s) {
+          if (s === "accepted") return 0;
+          if (s === "completed") return 1;
+          if (s === "abandoned") return 2;
+          return 3;
+        }
+        function getFiltered() {
+          var type = filterSel ? String(filterSel.value || "all") : "all";
+          var district = distSel ? String(distSel.value || "all") : "all";
+          var st = getStateMap();
+          return all.filter(function (x) {
+            // 已完成任务不再出现在委托板
+            if (st[x.id] === "completed") return false;
+            if (type !== "all" && x.tag !== type) return false;
+            if (district !== "all" && String(x.district || "") !== district) return false;
+            return true;
+          });
+        }
+        function sortData(data) {
+          var out = data.slice();
+          var st = getStateMap();
+          if (sortMode === "difficulty") {
+            out.sort(function (a, b) { return starsToScore(b.level) - starsToScore(a.level); });
+          } else if (sortMode === "status") {
+            out.sort(function (a, b) {
+              var d = statusRank(st[a.id]) - statusRank(st[b.id]);
+              if (d !== 0) return d;
+              return starsToScore(b.level) - starsToScore(a.level);
+            });
+          } else {
+            out.sort(function (a, b) { return String(b.id || "").localeCompare(String(a.id || "")); });
+          }
+          return out;
+        }
+        function goDetail(task) {
+          try { sessionStorage.setItem("p5_proto_detail_task", JSON.stringify(task)); } catch (e) {}
+          var u = new URL("./detail.html", location.href);
+          u.searchParams.set("id", task.id);
+          location.href = u.href;
+        }
+        function acceptTask(task) {
+          var st;
+          try { st = JSON.parse(localStorage.getItem(KEY_MY) || "{}") || {}; } catch (e) { st = {}; }
+          st.accepted = Array.isArray(st.accepted) ? st.accepted : [];
+          st.completed = Array.isArray(st.completed) ? st.completed : [];
+          st.abandoned = Array.isArray(st.abandoned) ? st.abandoned : [];
+          function has(arr, id) {
+            for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].id === id) return true;
+            return false;
+          }
+          if (has(st.accepted, task.id) || has(st.completed, task.id)) return;
+          for (var k = 0; k < st.abandoned.length; k++) {
+            if (st.abandoned[k] && st.abandoned[k].id === task.id) { st.abandoned.splice(k, 1); break; }
+          }
+          st.accepted.push(task);
+          localStorage.setItem(KEY_MY, JSON.stringify(st));
+        }
+        function render() {
+          var data = sortData(getFiltered());
+          var stateMap = getStateMap();
+          var pageCount = Math.max(1, Math.ceil(data.length / pageSize));
+          if (page > pageCount) page = pageCount;
+          if (page < 1) page = 1;
+          var start = (page - 1) * pageSize;
+          var slice = data.slice(start, start + pageSize);
+
+          host.classList.add("list--cards");
+          host.innerHTML = "";
+          slice.forEach(function (t) {
+            var card = document.createElement("div");
+            card.className = "taskCard";
+            card.setAttribute("data-rq-grade", gradeFromLevel(t.level || ""));
+            card.tabIndex = 0;
+
+            var thumb = document.createElement("div");
+            thumb.className = "taskCard__thumb";
+            var im = document.createElement("img");
+            im.src = t.cover || "../../../shared/p5ui/assets/src-assets/images/portraits/mona.png";
+            im.alt = "";
+            thumb.appendChild(im);
+
+            var body = document.createElement("div");
+            body.className = "taskCard__body";
+            body.innerHTML =
+              '<div class="taskCard__title">' + (t.title || t.id) + "</div>" +
+              '<div class="taskCard__meta">' + (t.id || "") + " · " + (t.tag || "任务") + " · " + (t.district || "—") + " · 难度 " + gradeFromLevel(t.level || "") + "</div>" +
+              '<div class="taskCard__summary">' + (t.summary || "") + "</div>";
+            var tagRow = document.createElement("div");
+            tagRow.className = "taskCard__tagRow";
+            var p1 = document.createElement("span");
+            p1.className = "pill pill--red";
+            p1.textContent = t.tag || "任务";
+            var p2 = document.createElement("span");
+            p2.className = "pill pill--cyan";
+            p2.textContent = t.client || "怪盗团";
+            tagRow.appendChild(p1);
+            tagRow.appendChild(p2);
+            body.appendChild(tagRow);
+
+            var actions = document.createElement("div");
+            actions.className = "taskCard__actions";
+            var b1 = document.createElement("button");
+            b1.type = "button";
+            b1.className = "p5-btn-ctn p5-hover-animation-mix";
+            var isTaken = stateMap[t.id] === "accepted" || stateMap[t.id] === "completed";
+            b1.textContent = isTaken ? "已接取" : "接取";
+            b1.disabled = !!isTaken;
+            if (isTaken) b1.classList.add("rq-btnTaken");
+            b1.onclick = function (e) {
+              e.stopPropagation();
+              if (b1.disabled) return;
+              acceptTask(t);
+              b1.textContent = "已接取";
+              b1.disabled = true;
+              b1.classList.add("rq-btnTaken");
+            };
+            var b2 = document.createElement("button");
+            b2.type = "button";
+            b2.className = "p5-btn-ctn p5-hover-animation-gray";
+            b2.textContent = "详情";
+            b2.onclick = function (e) { e.stopPropagation(); goDetail(t); };
+            actions.appendChild(b1);
+            actions.appendChild(b2);
+
+            card.appendChild(thumb);
+            card.appendChild(body);
+            card.appendChild(actions);
+            card.onclick = function () { goDetail(t); };
+            card.onkeydown = function (ev) {
+              if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); goDetail(t); }
+            };
+            host.appendChild(card);
+          });
+
+          pager.innerHTML = "";
+          function makeBtn(label, to, active, disabled) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = active ? "p5-btn-ctn p5-hover-animation-mix" : "p5-btn-ctn p5-hover-animation-gray";
+            b.textContent = label;
+            b.disabled = !!disabled;
+            b.onclick = function () { page = to; render(); };
+            pager.appendChild(b);
+          }
+          makeBtn("上一页", Math.max(1, page - 1), false, page <= 1);
+          for (var p = 1; p <= Math.min(7, pageCount); p++) makeBtn(String(p), p, p === page, false);
+          makeBtn("下一页", Math.min(pageCount, page + 1), false, page >= pageCount);
+        }
+
+        if (filterSel) filterSel.addEventListener("change", function () { page = 1; render(); });
+        if (distSel) distSel.addEventListener("change", function () { page = 1; render(); });
+        var sortTags = document.querySelectorAll(".rq-menuTag");
+        sortTags.forEach(function (tag) {
+          tag.addEventListener("click", function () {
+            sortTags.forEach(function (x) { x.classList.remove("rq-menuTag--active"); });
+            tag.classList.add("rq-menuTag--active");
+            var txt = tag.textContent || "";
+            sortMode = txt.indexOf("状态") >= 0 ? "status" : txt.indexOf("难度") >= 0 ? "difficulty" : "new";
+            page = 1;
+            render();
+          });
+        });
+        render();
+      })();
+    </script>
+  </body>
+</html>

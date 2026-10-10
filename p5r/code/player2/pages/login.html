@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录</title>
+    <link rel="stylesheet" href="../../../shared/p5ui/css/p5-ui.css" />
+    <link rel="stylesheet" href="../../shared/site.css" />
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body class="site site-login show-plain">
+    <header class="p2-loginHeader" role="banner">
+      <div class="p2-loginHeader__inner">
+        <img
+          class="p2-loginHeader__logo"
+          src="../../../shared/p5ui/assets/src-assets/logo.png"
+          alt="logo"
+        />
+        <a
+          id="guestLink"
+          class="p2-loginGuest"
+          href="../../player1/pages/bulletins.html"
+          >游客进入</a
+        >
+      </div>
+    </header>
+    <div class="login-pageFill">
+    <div class="login-shell">
+      <div class="login-left">
+        <h1 class="login-slogan">PHANTOM<br />THIEVES</h1>
+        <div class="login-sub">
+          <span class="muted">Sign in to continue.</span>
+        </div>
+      </div>
+
+      <div class="login-panel">
+        <h2 class="p5-title-ctn login-title"><span>登录</span></h2>
+        <form id="loginForm" class="login-form" data-login-client="1" novalidate>
+          <label>用户名
+            <input
+              id="loginName"
+              class="login-input"
+              name="username"
+              type="text"
+              autocomplete="username"
+              placeholder="至少 3 个字"
+              required
+              minlength="3"
+            />
+          </label>
+
+          <label>密码
+            <div class="password-wrapper">
+              <input
+                id="loginPass"
+                class="login-input"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="至少 6 位"
+                required
+                minlength="6"
+              />
+              <button id="togglePass" class="mask-btn" type="button" aria-pressed="false" title="显示密码">🎭</button>
+            </div>
+          </label>
+
+          <div class="login-actions login-actions--single">
+            <button id="submitBtn" class="p5-btn-ctn p5-hover-animation-mix login-submitBtn" type="submit">登录</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+
+    <footer class="p2-loginFooter" role="contentinfo">
+      <div class="p2-loginFooter__inner">
+        <p class="p2-loginFooter__line">Phantom Thieves</p>
+      </div>
+    </footer>
+
+    <!-- 与人物页 characters 一致：toastNoti 克隆模板，头像与气泡图路径与 DOM 结构完全相同 -->
+    <div id="p5NotiHost" class="site-notiHost" aria-live="polite" aria-relevant="additions removals"></div>
+    <div id="p5NotiTpl" class="p5-noti-ctn" style="display: none">
+      <div class="p5-noti-sub-ctn">
+        <img class="p5-portrait-img" src="../../../shared/p5ui/assets/src-assets/images/portraits/mona.png" alt="" />
+        <div class="p5-dialog-ctn">
+          <img class="p5-dialog-img" src="../../../shared/p5ui/assets/src-assets/images/notification.png" alt="" />
+          <div class="p5-noti-title">
+            <p class="p5-title-ctn text-size-small"><span>摩尔 加纳</span></p>
+          </div>
+          <div class="p5-noti-text">通知示例</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登录成功跳转全屏过场：雨宫莲动态素材（与照片舞台 photo-stage 同源），避免 html 淡出成全白 -->
+    <div
+      id="loginLeaveOverlay"
+      class="p2-loginLeaveOverlay"
+      hidden
+      aria-hidden="true"
+    >
+      <img
+        class="p2-loginLeaveOverlay__img"
+        src="../../../皇家p5r/雨宫莲/下面的动态素材.png"
+        alt=""
+        decoding="async"
+        onerror="this.onerror=null;this.src='../../../皇家p5r/雨宫莲/动态素材.png';"
+      />
+    </div>
+
+    <script src="../../shared/site.js"></script>
+    <script src="login.js"></script>
+  </body>
+</html>
+
