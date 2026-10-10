@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病历总结测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-btn { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #0056b3; }
+        .result { margin: 15px 0; padding: 15px; border-radius: 5px; min-height: 50px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #cce7ff; color: #004085; border: 1px solid #b3d7ff; }
+        textarea { width: 100%; height: 150px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 病历总结功能测试</h1>
+        
+        <!-- 测试1：解析Dify响应 -->
+        <div class="test-section">
+            <h3>测试1：解析Dify API响应</h3>
+            <p>测试解析你提供的Dify API响应数据</p>
+            <button class="test-btn" onclick="testDifyResponse()">测试Dify响应解析</button>
+            <div id="test1-result" class="result info">等待测试...</div>
+        </div>
+
+        <!-- 测试2：自定义JSON解析 -->
+        <div class="test-section">
+            <h3>测试2：自定义JSON解析</h3>
+            <p>输入自定义的病历总结JSON进行解析测试</p>
+            <textarea id="customJson" placeholder="输入JSON数据...">
+{
+  "properties": {
+    "symptom_details": {
+      "description": "患者主诉咽痛，始于前天晚上（最初为咽干），昨天加重。伴发热，最高体温38.5℃（昨日自测），今晨37.8℃。伴全身乏力。伴随症状包括干咳（痰少）、鼻塞、流清涕、头痛及全身关节酸痛。食欲因咽痛吞咽困难而差，睡眠因鼻塞受影响，二便正常。"
+    },
+    "vital_signs": {
+      "description": "体格检查示咽部充血明显，扁桃体肿大。心肺听诊未闻及异常。体温监测显示发热过程（见症状详情）。"
+    },
+    "past_medical_history": {
+      "description": "患者平素体健，有过敏性鼻炎病史（秋季易发作）。无药物过敏史。"
+    },
+    "current_medications": {
+      "description": "昨日曾自行服用布洛芬一片退热，体温可暂时下降但会再次升高。"
+    }
+  }
+}
+            </textarea>
+            <br>
+            <button class="test-btn" onclick="testCustomJson()">解析自定义JSON</button>
+            <div id="test2-result" class="result info">等待测试...</div>
+        </div>
+
+        <!-- 测试3：保存病历总结 -->
+        <div class="test-section">
+            <h3>测试3：保存病历总结到数据库</h3>
+            <p>测试将解析后的病历总结保存到数据库</p>
+            <button class="test-btn" onclick="testSaveSummary()">保存测试数据</button>
+            <div id="test3-result" class="result info">等待测试...</div>
+        </div>
+
+        <!-- 测试4：完整流程测试 -->
+        <div class="test-section">
+            <h3>测试4：完整流程测试</h3>
+            <p>测试完整的病历总结生成流程</p>
+            <input type="text" id="testVisitId" placeholder="输入visitId" value="test_visit_001" style="padding: 8px; margin-right: 10px;">
+            <button class="test-btn" onclick="testFullProcess()">完整流程测试</button>
+            <div id="test4-result" class="result info">等待测试...</div>
+        </div>
+    </div>
+
+    <script>
+        // 测试1：解析Dify响应
+        async function testDifyResponse() {
+            const resultDiv = document.getElementById('test1-result');
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '🔄 正在测试...';
+
+            // 模拟你提供的Dify API响应数据
+            const difyResponse = `{
+  "properties": {
+    "symptom_details": {
+      "description": "患者主诉咽痛，始于前天晚上（最初为咽干），昨天加重。伴发热，最高体温38.5℃（昨日自测），今晨37.8℃。伴全身乏力。伴随症状包括干咳（痰少）、鼻塞、流清涕、头痛及全身关节酸痛。食欲因咽痛吞咽困难而差，睡眠因鼻塞受影响，二便正常。"
+    },
+    "vital_signs": {
+      "description": "体格检查示咽部充血明显，扁桃体肿大。心肺听诊未闻及异常。体温监测显示发热过程（见症状详情）。"
+    },
+    "past_medical_history": {
+      "description": "患者平素体健，有过敏性鼻炎病史（秋季易发作）。无药物过敏史。"
+    },
+    "current_medications": {
+      "description": "昨日曾自行服用布洛芬一片退热，体温可暂时下降但会再次升高。"
+    }
+  }
+}`;
+
+            try {
+                const response = await fetch('/api/test/parse-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ jsonData: difyResponse })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS') {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 解析成功！</strong><br>
+                        <pre>${JSON.stringify(data.summary, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ 解析失败: ${data.message}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 请求失败: ${error.message}`;
+            }
+        }
+
+        // 测试2：自定义JSON解析
+        async function testCustomJson() {
+            const resultDiv = document.getElementById('test2-result');
+            const customJson = document.getElementById('customJson').value;
+            
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '🔄 正在解析...';
+
+            try {
+                const response = await fetch('/api/test/parse-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ jsonData: customJson })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS') {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 解析成功！</strong><br>
+                        <pre>${JSON.stringify(data.summary, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ 解析失败: ${data.message}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 请求失败: ${error.message}`;
+            }
+        }
+
+        // 测试3：保存病历总结
+        async function testSaveSummary() {
+            const resultDiv = document.getElementById('test3-result');
+            
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '🔄 正在保存...';
+
+            const testSummary = {
+                visitId: 'test_visit_' + Date.now(),
+                doctorId: 'test_doctor_001',
+                patientId: 'test_patient_001',
+                symptomDetails: '测试症状详情：患者主诉咽痛，伴发热',
+                vitalSigns: '测试生命体征：体温38.5℃，咽部充血',
+                pastMedicalHistory: '测试既往病史：平素体健',
+                currentMedications: '测试当前用药：布洛芬'
+            };
+
+            try {
+                const response = await fetch('/api/test/save-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testSummary)
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS') {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ 保存成功！visitId: ${testSummary.visitId}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ 保存失败: ${data.message}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 请求失败: ${error.message}`;
+            }
+        }
+
+        // 测试4：完整流程测试
+        async function testFullProcess() {
+            const resultDiv = document.getElementById('test4-result');
+            const visitId = document.getElementById('testVisitId').value;
+            
+            if (!visitId) {
+                alert('请输入visitId');
+                return;
+            }
+
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = '🔄 正在测试完整流程...';
+
+            try {
+                // 1. 检查转录记录
+                resultDiv.innerHTML += '<br>1. 检查转录记录...';
+                const transcriptResponse = await fetch(`/api/transcription/visit/${encodeURIComponent(visitId)}`);
+                
+                if (!transcriptResponse.ok) {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ 未找到visitId=${visitId}的转录记录，请先进行语音转录`;
+                    return;
+                }
+
+                // 2. 生成病历总结
+                resultDiv.innerHTML += '<br>2. 生成病历总结...';
+                const summaryUrl = `/api/medical-summary/generate/${encodeURIComponent(visitId)}?doctorId=test_doctor&patientId=test_patient`;
+                
+                const summaryResponse = await fetch(summaryUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'text/event-stream'
+                    }
+                });
+
+                if (!summaryResponse.ok) {
+                    throw new Error(`HTTP ${summaryResponse.status}: ${summaryResponse.statusText}`);
+                }
+
+                const reader = summaryResponse.body.getReader();
+                const decoder = new TextDecoder();
+                let summaryContent = '';
+                let jsonSummary = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+
+                                if (data.event === 'completed') {
+                                    if (jsonSummary && jsonSummary.properties) {
+                                        // 格式化显示JSON格式的病历总结
+                                        let formattedSummary = '<strong>✅ 完整流程测试成功！</strong><br>';
+                                        formattedSummary += `visitId: ${visitId}<br><br>`;
+                                        formattedSummary += '<div style="background: white; border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">';
+                                        
+                                        if (jsonSummary.properties.symptom_details) {
+                                            formattedSummary += `<div style="padding: 15px; border-bottom: 1px solid #eee;">
+                                                <strong style="color: #007bff;">🔍 症状详情</strong>
+                                                <p style="margin: 8px 0; color: #333;">${jsonSummary.properties.symptom_details.description}</p>
+                                            </div>`;
+                                        }
+                                        if (jsonSummary.properties.vital_signs) {
+                                            formattedSummary += `<div style="padding: 15px; border-bottom: 1px solid #eee;">
+                                                <strong style="color: #dc3545;">❤️ 生命体征</strong>
+                                                <p style="margin: 8px 0; color: #333;">${jsonSummary.properties.vital_signs.description}</p>
+                                            </div>`;
+                                        }
+                                        if (jsonSummary.properties.past_medical_history) {
+                                            formattedSummary += `<div style="padding: 15px; border-bottom: 1px solid #eee;">
+                                                <strong style="color: #ffc107;">📋 既往病史</strong>
+                                                <p style="margin: 8px 0; color: #333;">${jsonSummary.properties.past_medical_history.description}</p>
+                                            </div>`;
+                                        }
+                                        if (jsonSummary.properties.current_medications) {
+                                            formattedSummary += `<div style="padding: 15px;">
+                                                <strong style="color: #17a2b8;">💊 当前用药</strong>
+                                                <p style="margin: 8px 0; color: #333;">${jsonSummary.properties.current_medications.description}</p>
+                                            </div>`;
+                                        }
+                                        
+                                        formattedSummary += '</div>';
+                                        resultDiv.className = 'result success';
+                                        resultDiv.innerHTML = formattedSummary;
+                                    } else {
+                                        resultDiv.className = 'result success';
+                                        resultDiv.innerHTML = `
+                                            <strong>✅ 完整流程测试成功！</strong><br>
+                                            visitId: ${visitId}<br>
+                                            生成的病历总结：<br>
+                                            <pre>${summaryContent}</pre>
+                                        `;
+                                    }
+                                    return;
+                                } else if (data.event === 'error') {
+                                    resultDiv.className = 'result error';
+                                    resultDiv.innerHTML = `❌ 生成失败: ${data.message}`;
+                                    return;
+                                } else if (data.event === 'message' && data.content) {
+                                    // 检查是否是JSON格式
+                                    if (typeof data.content === 'object') {
+                                        jsonSummary = data.content;
+                                        summaryContent = JSON.stringify(data.content);
+                                    } else if (typeof data.content === 'string' && data.content.trim().startsWith('{')) {
+                                        try {
+                                            jsonSummary = JSON.parse(data.content);
+                                            summaryContent = data.content;
+                                        } catch (e) {
+                                            summaryContent += data.content;
+                                        }
+                                    } else {
+                                        summaryContent += (typeof data.content === 'string' ? data.content : JSON.stringify(data.content));
+                                    }
+                                    resultDiv.innerHTML = `🔄 正在生成...<br><pre>${summaryContent.substring(0, 500)}</pre>`;
+                                }
+                            } catch (e) {
+                                console.error('解析SSE数据失败:', e);
+                            }
+                        }
+                    }
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
